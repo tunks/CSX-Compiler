@@ -1,0 +1,135 @@
+/*=================================================================
+#    Author:        Chen Liu
+#    Email:         chen.liu@uky.edu
+#    Description:   Compiler Design Assignment: Symbal Table Classes
+==================================================================*/
+
+Please enter commends:
+insert kentucky 1840
+(kentucky:1840) entered into symbol table.
+
+Please enter commends:
+i KEntucky 1841
+DuplicateException: KEntucky already entered into top scope.
+
+Please enter commends:
+lookup KENTUCKY
+(kentucky:1840) found in top scope.
+
+Please enter commends:
+lookup florida
+florida not found in top scope.
+
+Please enter commends:
+INSERT FLORIDA
+Error: mismatched the number of parameter or the second parameter could not convert to Integer, please retry.
+
+Please enter commends:
+I FLORIDA 1842
+(FLORIDA:1842) entered into symbol table.
+
+Please enter commends:
+OPEN
+New scope opened.
+
+Please enter commends:
+Inser kentucky 1843
+Error: Inser is illegal, please retry.
+
+Please enter commends:
+i kentucky 1843 newyork 1843
+Error: mismatched the number of parameter or the second parameter could not convert to Integer, please retry.
+
+Please enter commends:
+i kentucky 1844
+(kentucky:1844) entered into symbol table.
+
+Please enter commends:
+insert NewYork 1843+
+Error: mismatched the number of parameter or the second parameter could not convert to Integer, please retry.
+
+Please enter commends:
+insert NewYork 1843
+(NewYork:1843) entered into symbol table.
+
+Please enter commends:
+o
+New scope opened.
+
+Please enter commends:
+L newyork kentucky
+newyork not found in top scope.
+kentucky not found in top scope.
+
+Please enter commends:
+global newyork kentucky newyork2 newyork3
+(NewYork:1843) found in symbol table.
+(kentucky:1844) found in symbol table.
+newyork2 not found in symbol table.
+newyork3 not found in symbol table.
+
+Please enter commends:
+G florida
+(FLORIDA:1842) found in symbol table.
+
+Please enter commends:
+Dump
+Contents of symbol table:
+{}
+{NewYork = (NewYork:1843), kentucky = (kentucky:1844)}
+{kentucky = (kentucky:1840), FLORIDA = (FLORIDA:1842)}
+
+Please enter commends:
+clos
+Error: clos is illegal, please retry.
+
+Please enter commends:
+close
+Top scope closed.
+
+Please enter commends:
+d
+Contents of symbol table:
+{NewYork = (NewYork:1843), kentucky = (kentucky:1844)}
+{kentucky = (kentucky:1840), FLORIDA = (FLORIDA:1842)}
+
+Please enter commends:
+CLOSE
+Top scope closed.
+
+Please enter commends:
+close
+Top scope closed.
+
+Please enter commends:
+clOSe
+EmptySTException: The list of scopes is empty!
+
+Please enter commends:
+dum
+Error: dum is illegal, please retry.
+
+Please enter commends:
+dump
+The symbol table is empty!
+
+Please enter commends:
+insert newyork2 1845
+EmptySTException: The list of scopes is empty, please input command "open" first!
+
+Please enter commends:
+open
+New scope opened.
+
+Please enter commends:
+insert newyork2 1845
+(newyork2:1845) entered into symbol table.
+
+Please enter commends:
+D
+Contents of symbol table:
+{newyork2 = (newyork2:1845)}
+
+Please enter commends:
+quit
+Testing done.

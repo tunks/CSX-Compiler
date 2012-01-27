@@ -1,0 +1,30 @@
+insert kentucky 1840
+i      KEntucky 1841
+lookup KENTUCKY
+lookup florida
+INSERT FLORIDA
+I      FLORIDA  1842
+OPEN
+Inser  kentucky 1843
+i      kentucky 1843 newyork 1843
+i      kentucky 1844
+insert NewYork  1843+
+insert NewYork  1843
+o
+L      newyork kentucky
+global newyork kentucky newyork2 newyork3
+G      florida
+Dump
+clos
+close
+d
+CLOSE
+close
+clOSe
+dum
+dump
+insert newyork2 1845
+open
+insert newyork2 1845
+D
+quit

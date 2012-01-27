@@ -1,0 +1,111 @@
+/*  Expand this file into your solution for project 2 */
+
+class CSXToken {
+	int linenum;
+	int colnum;
+	CSXToken(int line,int col) {
+		linenum=line;colnum=col;
+	}
+}
+
+class CSXIntLitToken extends CSXToken {
+	int intValue;
+	CSXIntLitToken(int val,int line,int col) {
+	   super(line,col);intValue=val; 
+	};
+}
+
+class CSXIdentifierToken extends CSXToken {
+	String identifierText;
+	CSXIdentifierToken(String text,int line,int col) {
+		super(line,col);identifierText=text;
+	}
+}
+
+class CSXCharLitToken extends CSXToken {
+	char charValue;
+	CSXCharLitToken(char val,int line,int col) {
+		super(line,col);charValue=val;
+	}
+}
+
+class CSXStringLitToken extends CSXToken {
+	String stringText; // Full text of string literal,
+                          //  including quotes & escapes
+	CSXStringLitToken(String text,int line,int col) {
+		super(line,col);
+		stringText=text;
+	}
+}
+
+// This class is used to track line and column numbers
+// Feel free to change to extend it
+class Pos {
+	static int  linenum = 1; /* maintain this as line number current
+                                 token was scanned on */
+	static int  colnum = 1; /* maintain this as column number current
+                                 token began at */
+	static int  line = 1; /* maintain this as line number after
+					scanning current token  */
+	static int  col = 1; /* maintain this as column number after
+					scanning current token  */
+	static void setpos() { // set starting position for current token
+		linenum = line;
+		colnum = col;
+	}
+}
+
+class Symbol { 
+	public int sym;
+	public CSXToken value;
+	public Symbol(int tokenType, CSXToken theToken) {
+		sym = tokenType;
+		value = theToken;
+	}
+}
+
+%%
+
+DIGIT=[0-9]
+
+%type Symbol
+%eofval{
+  return new Symbol(sym.EOF, new CSXToken(0,0));
+%eofval}
+
+
+%%
+
+"+"	{
+	Pos.setpos();
+	Pos.col += 1;
+	return new Symbol(sym.PLUS,
+		new CSXToken(Pos.linenum,Pos.colnum));
+}
+"!="	{
+	Pos.setpos();
+	Pos.col +=2;
+	return new Symbol(sym.NOTEQ,
+		new CSXToken(Pos.linenum,Pos.colnum));
+}
+";"	{
+	Pos.setpos();
+	Pos.col +=1;
+	return new Symbol(sym.SEMI,
+		new CSXToken(Pos.linenum,Pos.colnum));
+}
+{DIGIT}+	{
+	// This def doesn't check for overflow -- be sure to update it
+	Pos.setpos(); Pos.col += yytext().length();
+	return new Symbol(sym.INTLIT,
+		new CSXIntLitToken(Integer.parseInt(yytext()),
+			Pos.linenum,Pos.colnum));
+}
+
+\n	{
+	Pos.line += 1;
+	Pos.col = 1;
+}
+" "	{
+	Pos.col += 1;
+}

@@ -56,6 +56,18 @@ class P2 {
 		case sym.NOTEQ:
 			System.out.println("\t!=");
 			break;
+    
+    case sym.TIMES:
+      System.out.println("\t*");
+      break;
+
+    case sym.LPAREN:
+      System.out.println("\t(");
+      break;
+
+    case sym.RPAREN:
+      System.out.println("\t)");
+      break;
 
 		default:
 			System.out.println("unrecognized token type: " + token.value);

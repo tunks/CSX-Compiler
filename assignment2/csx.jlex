@@ -8,6 +8,7 @@ class CSXToken {
 	}
 }
 
+//integer
 class CSXIntLitToken extends CSXToken {
 	int intValue;
 	CSXIntLitToken(int val,int line,int col) {
@@ -15,6 +16,7 @@ class CSXIntLitToken extends CSXToken {
 	};
 }
 
+//identifier
 class CSXIdentifierToken extends CSXToken {
 	String identifierText;
 	CSXIdentifierToken(String text,int line,int col) {
@@ -22,6 +24,7 @@ class CSXIdentifierToken extends CSXToken {
 	}
 }
 
+//character
 class CSXCharLitToken extends CSXToken {
 	char charValue;
 	CSXCharLitToken(char val,int line,int col) {
@@ -29,6 +32,7 @@ class CSXCharLitToken extends CSXToken {
 	}
 }
 
+//string
 class CSXStringLitToken extends CSXToken {
 	String stringText; // Full text of string literal,
                           //  including quotes & escapes
@@ -56,8 +60,8 @@ class Pos {
 }
 
 class Symbol { 
-	public int sym;
-	public CSXToken value;
+	public int sym; //identifies the token class just matched
+	public CSXToken value; //contains token information beyond the identity
 	public Symbol(int tokenType, CSXToken theToken) {
 		sym = tokenType;
 		value = theToken;
@@ -67,6 +71,7 @@ class Symbol {
 %%
 
 DIGIT=[0-9]
+
 
 %type Symbol
 %eofval{
@@ -94,13 +99,39 @@ DIGIT=[0-9]
 	return new Symbol(sym.SEMI,
 		new CSXToken(Pos.linenum,Pos.colnum));
 }
-{DIGIT}+	{
+("~"{DIGIT}+)|({DIGIT}+)	{
 	// This def doesn't check for overflow -- be sure to update it
 	Pos.setpos(); Pos.col += yytext().length();
-	return new Symbol(sym.INTLIT,
-		new CSXIntLitToken(Integer.parseInt(yytext()),
+  if (yytext().startsWith("~")){
+    String tempstr = yytext().substring(1);
+    return new Symbol(sym.INTLIT,
+	new CSXIntLitToken((-1)*Integer.parseInt(tempstr),
 			Pos.linenum,Pos.colnum));
+  }
+	else {return new Symbol(sym.INTLIT,
+		new CSXIntLitToken(Integer.parseInt(yytext()),
+			Pos.linenum,Pos.colnum));}
 }
+
+"(" {
+  Pos.setpos();
+  Pos.col += 1;
+  return new Symbol(sym.LPAREN, 
+    new CSXToken(Pos.linenum, Pos.colnum));
+}
+"*" {
+  Pos.setpos();
+  Pos.col += 1;
+  return new Symbol(sym.TIMES,
+    new CSXToken(Pos.linenum, Pos.colnum));
+}
+")" {
+  Pos.setpos();
+  Pos.col += 1;
+  return new Symbol(sym.RPAREN,
+    new CSXToken(Pos.linenum, Pos.colnum));
+}
+
 
 \n	{
 	Pos.line += 1;

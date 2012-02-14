@@ -51,5 +51,7 @@ public class sym {
   static final int rw_BREAK = 50;
   static final int rw_CONTINUE = 51;
   static final int COLON = 52;      //:
+
+  static final int MULTICOM = 53;
 };
 

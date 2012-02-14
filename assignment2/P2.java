@@ -40,6 +40,8 @@ class P2 {
 
 	while ( token.sym != sym.EOF) {
 
+    if (token.sym != sym.MULTICOM) {
+
 		System.out.print( token.value.linenum + ":"
 				+ token.value.colnum + " ");
 
@@ -69,9 +71,82 @@ class P2 {
       System.out.println("\t)");
       break;
 
-		default:
+    case sym.LBRACKET:
+      System.out.println("\t[");
+      break;
+
+    case sym.RBRACKET:
+      System.out.println("\t]");
+      break;
+    
+    case sym.EQ:
+      System.out.println("\t=");
+      break;
+
+    case sym.SEMI:
+      System.out.println("\t;");
+      break;
+		
+		case sym.MINUS:
+			System.out.println("\t-");
+			break;
+
+		case sym.SLASH:
+			System.out.println("\t/");
+			break;
+    
+    case sym.ASG:
+      System.out.println("\t==");
+      break;
+
+    case sym.CAND:
+      System.out.println("\t&&");
+      break;
+
+    case sym.COR:
+      System.out.println("\t||");
+      break;
+
+    case sym.LT:
+      System.out.println("\t<");
+      break;
+    
+    case sym.GT:
+      System.out.println("\t>");
+      break;
+
+    case sym.LEQ:
+      System.out.println("\t<=");
+      break;
+
+		case sym.GEQ:
+			System.out.println("\t>=");
+			break;
+
+		case sym.COMMA:
+			System.out.println("\t,");
+			break;
+    
+    case sym.NOT:
+      System.out.println("\t!");
+      break;
+
+    case sym.LBRACE:
+      System.out.println("\t{");
+      break;
+
+    case sym.RBRACE:
+      System.out.println("\t}");
+      break;
+
+    case sym.COLON:
+      System.out.println("\t:");
+      break;
+
+    default:
 			System.out.println("unrecognized token type: " + token.value);
 		} // switch(token.sym)
+    }
 		token = lex.yylex(); // get next token
 	} // not at EOF
 	System.out.println("End test of CSX scanner.");

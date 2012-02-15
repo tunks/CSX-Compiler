@@ -124,7 +124,13 @@ MULTICOMMENT=[#][^#]|[^#]
   while (tempstr.indexOf("\n",position) != -1){
     position = tempstr.indexOf("\n", position) + 1;
     count++;
-    Pos.col = tempstr.length() - position + 1;
+    int position_tab = position;
+    int count_tab = 0;
+    while (tempstr.indexOf("\t", position_tab) != -1){ //calculate amount of \t
+        count_tab++;
+        position_tab = tempstr.indexOf("\t", position_tab) + 1;
+    }
+    Pos.col = tempstr.length() - position + 1 + count_tab * 3;
   }
   Pos.line += count;
   return new Symbol(sym.MULTICOM, new
@@ -456,7 +462,7 @@ MULTICOMMENT=[#][^#]|[^#]
 }
 
 \t  {
-  Pos.col += 2;
+  Pos.col += 4;
 }
 
 \n	{

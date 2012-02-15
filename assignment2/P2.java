@@ -46,8 +46,23 @@ class P2 {
 				+ token.value.colnum + " ");
 
 		switch (token.sym) {
+    case sym.STRLIT:
+      System.out.println("\tString literal(" +
+          ((CSXStringLitToken) token.value).stringText + ")");
+      break;
+
+    case sym.CHARLIT:
+      System.out.println("\tChar literal(" +
+          ((CSXCharLitToken) token.value).charValue + ")");
+      break;
+
+    case sym.IDENTIFIER:
+      System.out.println("\tIdentifier  (" +
+          ((CSXStringLitToken) token.value).stringText + ")");
+      break;
+
 		case sym.INTLIT:
-			System.out.println("\tinteger literal(" +
+			System.out.println("\tInteger literal(" +
 				((CSXIntLitToken) token.value).intValue + ")");
 			break;
 
@@ -58,7 +73,7 @@ class P2 {
 		case sym.NOTEQ:
 			System.out.println("\t!=");
 			break;
-    
+
     case sym.TIMES:
       System.out.println("\t*");
       break;
@@ -78,9 +93,9 @@ class P2 {
     case sym.RBRACKET:
       System.out.println("\t]");
       break;
-    
+
     case sym.EQ:
-      System.out.println("\t=");
+      System.out.println("\t==");
       break;
 
     case sym.SEMI:
@@ -94,9 +109,9 @@ class P2 {
 		case sym.SLASH:
 			System.out.println("\t/");
 			break;
-    
+
     case sym.ASG:
-      System.out.println("\t==");
+      System.out.println("\t=");
       break;
 
     case sym.CAND:
@@ -110,7 +125,7 @@ class P2 {
     case sym.LT:
       System.out.println("\t<");
       break;
-    
+
     case sym.GT:
       System.out.println("\t>");
       break;
@@ -126,7 +141,7 @@ class P2 {
 		case sym.COMMA:
 			System.out.println("\t,");
 			break;
-    
+
     case sym.NOT:
       System.out.println("\t!");
       break;
@@ -143,6 +158,74 @@ class P2 {
       System.out.println("\t:");
       break;
 
+    case sym.rw_BOOL:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_BREAK:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_CHAR:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_CLASS:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_CONST:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_CONTINUE:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_ELSE:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_FALSE:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_IF:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_INT:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_READ:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_RETURN:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_TRUE:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_VOID:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_WHILE:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.rw_PRINT:
+      System.out.println("\t" + ((CSXStringLitToken)token.value).stringText);
+      break;
+
+    case sym.UNKNOWN:
+      System.out.println("***ERROR: invalid token (" + ((CSXStringLitToken)token.value).stringText + ")");
+      break;
+
     default:
 			System.out.println("unrecognized token type: " + token.value);
 		} // switch(token.sym)
@@ -153,3 +236,4 @@ class P2 {
   } // main()
 
 } // class P2
+

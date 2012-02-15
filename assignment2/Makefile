@@ -36,7 +36,7 @@ Yylex.java: csx.jlex
 ###
 
 test:   P2.class Yylex.class tiny.csx
-	java $(JFLAGS) P2 tiny.csx
+	java $(JFLAGS) P2 test.csx
 
 ###
 # style check

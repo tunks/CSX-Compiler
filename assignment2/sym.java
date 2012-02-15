@@ -41,10 +41,10 @@ public class sym {
   static final int LEQ = 21;       //<=
   static final int NOTEQ = 20;     //!=
   static final int CHARLIT = 9;    //character literals
-  static final int ASG = 6;        //...
+  static final int ASG = 6;        //=
   static final int rw_TRUE = 39;
   static final int RBRACKET = 14;   //]
-  static final int EQ = 19;         //=
+  static final int EQ = 19;         //==
   static final int rw_BOOL = 36;
   static final int rw_IF = 30;
   static final int NOT = 27;        //!
@@ -53,5 +53,8 @@ public class sym {
   static final int COLON = 52;      //:
 
   static final int MULTICOM = 53;
+  static final int rw_VOID = 54;
+  static final int rw_PRINT = 55;
+  static final int UNKNOWN = 56;
 };
 

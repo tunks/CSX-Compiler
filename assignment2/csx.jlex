@@ -26,8 +26,8 @@ class CSXIdentifierToken extends CSXToken {
 
 //character
 class CSXCharLitToken extends CSXToken {
-	char charValue;
-	CSXCharLitToken(char val,int line,int col) {
+	String charValue;
+	CSXCharLitToken(String val,int line,int col) {
 		super(line,col);charValue=val;
 	}
 }
@@ -71,7 +71,11 @@ class Symbol {
 %%
 
 DIGIT=[0-9]
-MULTICOMMENT=([#]+[^#]|[^#])*
+//IDENTIFIER = [:jletter:][:jletterdigit:]*
+IDENTIFIER = [A-Za-z0-9]
+//MULTICOMMENT=([#]+[^#]|[^#])*
+MULTICOMMENT=[#][^#]|[^#]
+
 
 
 %type Symbol
@@ -83,21 +87,36 @@ MULTICOMMENT=([#]+[^#]|[^#])*
 %%
 
 ("~"{DIGIT}+)|({DIGIT}+)	{
-	// This def doesn't check for overflow -- be sure to update it
 	Pos.setpos(); Pos.col += yytext().length();
+  double  tempdouble;
   if (yytext().startsWith("~")){
     String tempstr = yytext().substring(1);
-    return new Symbol(sym.INTLIT,
-	new CSXIntLitToken((-1)*Integer.parseInt(tempstr),
-			Pos.linenum,Pos.colnum));
+    tempdouble = Double.parseDouble(tempstr) * (-1);
+    if (tempdouble < Integer.MIN_VALUE) {
+       System.out.println("********ERROR: The value below is smaller than MIN_VALUE, it has been replaced by MIN_VALUE");
+       return new Symbol(sym.INTLIT,
+	       new CSXIntLitToken(Integer.MIN_VALUE,Pos.linenum,Pos.colnum));
+    }
+    else
+      return new Symbol(sym.INTLIT,
+	  new CSXIntLitToken((-1)*Integer.parseInt(tempstr),Pos.linenum,Pos.colnum));
   }
-	else {return new Symbol(sym.INTLIT,
-		new CSXIntLitToken(Integer.parseInt(yytext()),
-			Pos.linenum,Pos.colnum));}
+	else {
+    tempdouble = Double.parseDouble(yytext());
+    if (tempdouble > Integer.MAX_VALUE) {
+       System.out.println("********ERROR: The value below is larger than MAX_VALUE, it has been replaced by MAX_VALUE");
+       return new Symbol(sym.INTLIT,
+		      new CSXIntLitToken(Integer.MAX_VALUE,Pos.linenum,Pos.colnum));
+    }
+    else
+      return new Symbol(sym.INTLIT,
+		    new CSXIntLitToken(Integer.parseInt(yytext()),Pos.linenum,Pos.colnum));
+  }
 }
 
+
 //multi-line comment
-("##"{MULTICOMMENT}"#"+"#") {
+("##"{MULTICOMMENT}*"##") {
   Pos.setpos();
   Pos.col += yytext().length();
   String tempstr = yytext();
@@ -105,6 +124,7 @@ MULTICOMMENT=([#]+[^#]|[^#])*
   while (tempstr.indexOf("\n",position) != -1){
     position = tempstr.indexOf("\n", position) + 1;
     count++;
+    Pos.col = tempstr.length() - position + 1;
   }
   Pos.line += count;
   return new Symbol(sym.MULTICOM, new
@@ -117,7 +137,8 @@ MULTICOMMENT=([#]+[^#]|[^#])*
   Pos.col = 1;
 }
 
-//other tokens
+
+/***********************other tokens**********************/
 "(" {
   Pos.setpos();
   Pos.col += 1;
@@ -177,7 +198,7 @@ MULTICOMMENT=([#]+[^#]|[^#])*
 "=" {
   Pos.setpos();
   Pos.col += 1;
-  return new Symbol(sym.EQ,
+  return new Symbol(sym.ASG,
     new CSXToken(Pos.linenum,Pos.colnum));
 }
 
@@ -198,7 +219,7 @@ MULTICOMMENT=([#]+[^#]|[^#])*
 "==" {
   Pos.setpos();
   Pos.col += 2;
-  return new Symbol(sym.ASG,
+  return new Symbol(sym.EQ,
     new CSXToken(Pos.linenum,Pos.colnum));
 }
 
@@ -279,7 +300,164 @@ MULTICOMMENT=([#]+[^#]|[^#])*
     new CSXToken(Pos.linenum,Pos.colnum));
 }
 
+/*************************reserved words***************************/
+(b|B)(o|O)(o|0)(l|L) {
+  Pos.setpos();
+  Pos.col += 4;
+  return new Symbol(sym.rw_BOOL,
+    new CSXStringLitToken("bool",Pos.linenum,Pos.colnum));
+}
 
+(b|B)(r|R)(e|E)(a|A)(k|K) {
+  Pos.setpos();
+  Pos.col += 5;
+  return new Symbol(sym.rw_BREAK,
+    new CSXStringLitToken("break",Pos.linenum,Pos.colnum));
+}
+
+(c|C)(h|H)(a|A)(r|R) {
+  Pos.setpos();
+  Pos.col += 4;
+  return new Symbol(sym.rw_CHAR,
+	  new CSXStringLitToken("char",
+			Pos.linenum,Pos.colnum));
+}
+
+(c|C)(l|L)(a|A)(s|S)(s|S) {
+  Pos.setpos();
+  Pos.col += 5;
+  return new Symbol(sym.rw_CLASS,
+	  new CSXStringLitToken("class",
+			Pos.linenum,Pos.colnum));
+}
+
+(c|C)(o|O)(n|N)(s|S)(t|T) {
+  Pos.setpos();
+  Pos.col += 5;
+  return new Symbol(sym.rw_CONST,
+	  new CSXStringLitToken("const",
+			Pos.linenum,Pos.colnum));
+}
+
+(c|C)(o|O)(n|N)(t|T)(i|I)(n|N)(u|U)(e|E) {
+  Pos.setpos();
+  Pos.col += 8;
+  return new Symbol(sym.rw_CONTINUE,
+	  new CSXStringLitToken("continue",
+			Pos.linenum,Pos.colnum));
+}
+
+(e|E)(l|L)(s|S)(e|E) {
+  Pos.setpos();
+  Pos.col += 4;
+  return new Symbol(sym.rw_ELSE,
+	  new CSXStringLitToken("else",
+			Pos.linenum,Pos.colnum));
+}
+
+(f|F)(a|A)(l|L)(s|S)(e|E) {
+  Pos.setpos();
+  Pos.col += 5;
+  return new Symbol(sym.rw_FALSE,
+	  new CSXStringLitToken("false",
+			Pos.linenum,Pos.colnum));
+}
+
+(i|I)(f|F) {
+  Pos.setpos();
+  Pos.col += 2;
+  return new Symbol(sym.rw_IF,
+	  new CSXStringLitToken("if",
+			Pos.linenum,Pos.colnum));
+}
+
+(i|I)(n|N)(t|T) {
+  Pos.setpos();
+  Pos.col += 3;
+  return new Symbol(sym.rw_INT,
+	  new CSXStringLitToken("int",
+			Pos.linenum,Pos.colnum));
+}
+
+(r|R)(e|E)(a|A)(d|D) {
+  Pos.setpos();
+  Pos.col += 4;
+  return new Symbol(sym.rw_READ,
+	  new CSXStringLitToken("read",
+			Pos.linenum,Pos.colnum));
+}
+
+(r|R)(e|E)(t|T)(u|U)(r|R)(n|N) {
+  Pos.setpos();
+  Pos.col += 6;
+  return new Symbol(sym.rw_RETURN,
+	  new CSXStringLitToken("return",
+			Pos.linenum,Pos.colnum));
+}
+
+(t|T)(r|R)(u|U)(e|E) {
+  Pos.setpos();
+  Pos.col += 4;
+  return new Symbol(sym.rw_TRUE,
+	  new CSXStringLitToken("true",
+			Pos.linenum,Pos.colnum));
+}
+
+(v|V)(o|O)(i|I)(d|D) {
+  Pos.setpos();
+  Pos.col += 4;
+  return new Symbol(sym.rw_VOID,
+	  new CSXStringLitToken("void",
+			Pos.linenum,Pos.colnum));
+}
+
+(w|W)(h|H)(i|I)(l|L)(e|E) {
+  Pos.setpos();
+  Pos.col += 5;
+  return new Symbol(sym.rw_WHILE,
+	  new CSXStringLitToken("while",
+			Pos.linenum,Pos.colnum));
+}
+
+(p|P)(r|R)(i|I)(n|N)(t|T) {
+  Pos.setpos();
+  Pos.col += 5;
+  return new Symbol(sym.rw_PRINT,
+	  new CSXStringLitToken("print",
+			Pos.linenum,Pos.colnum));
+}
+
+
+/**********************ientifiers********************/
+[A-Za-z]{IDENTIFIER}* {
+ 	Pos.setpos();
+  Pos.col += yytext().length();
+  return new Symbol(sym.IDENTIFIER,
+	  new CSXStringLitToken(yytext(),
+			  Pos.linenum,Pos.colnum));
+}
+
+/***********************String Literals***************/
+"\""([^\"\\]|\\t|\\n|\\\\|\\\")*"\"" {
+  Pos.setpos();
+  Pos.col += yytext().length();
+  return new Symbol(sym.STRLIT,
+    new CSXStringLitToken(yytext(),
+        Pos.linenum,Pos.colnum));
+}
+
+/*********************Character Literals*****************/
+"'"([^\\'\040]|\\'|\\n|\\t|\\\\)"'" {
+  Pos.setpos();
+  Pos.col += 1;
+  return new Symbol(sym.CHARLIT,
+    new CSXCharLitToken(yytext(),
+        Pos.linenum,Pos.colnum));
+}
+
+\t  {
+  Pos.col += 2;
+}
 
 \n	{
 	Pos.line += 1;
@@ -287,4 +465,10 @@ MULTICOMMENT=([#]+[^#]|[^#])*
 }
 " "	{
 	Pos.col += 1;
+}
+
+[^] {
+  Pos.setpos();
+  Pos.col += yytext().length();
+  return new Symbol(sym.UNKNOWN,new CSXStringLitToken(yytext(),Pos.linenum,Pos.colnum));
 }

@@ -36,7 +36,7 @@ L: while (i != 0) {
 	i = i*i/2; break L;
 	i = i/(i-2); continue L
 }
-
+  
 if (i == 10 || i < 21 || i > ~17 || i != 123) {
 	Print( i);
 	p(17);

@@ -1,5 +1,4 @@
-/*  Expand this file into your solution for project 2 */
-
+/* Parent Class */
 class CSXToken {
 	int linenum;
 	int colnum;
@@ -8,7 +7,7 @@ class CSXToken {
 	}
 }
 
-//integer
+/* Integer Literal Class */
 class CSXIntLitToken extends CSXToken {
 	int intValue;
 	CSXIntLitToken(int val,int line,int col) {
@@ -16,7 +15,7 @@ class CSXIntLitToken extends CSXToken {
 	};
 }
 
-//identifier
+/* Identifiers Class */
 class CSXIdentifierToken extends CSXToken {
 	String identifierText;
 	CSXIdentifierToken(String text,int line,int col) {
@@ -24,7 +23,7 @@ class CSXIdentifierToken extends CSXToken {
 	}
 }
 
-//character
+/* Character Literals Class */
 class CSXCharLitToken extends CSXToken {
 	String charValue;
 	CSXCharLitToken(String val,int line,int col) {
@@ -32,7 +31,7 @@ class CSXCharLitToken extends CSXToken {
 	}
 }
 
-//string
+/* String Literals Class */
 class CSXStringLitToken extends CSXToken {
 	String stringText; // Full text of string literal,
                           //  including quotes & escapes
@@ -42,8 +41,7 @@ class CSXStringLitToken extends CSXToken {
 	}
 }
 
-// This class is used to track line and column numbers
-// Feel free to change to extend it
+/* This class is used to track line and column numbers */
 class Pos {
 	static int  linenum = 1; /* maintain this as line number current
                                  token was scanned on */
@@ -59,7 +57,7 @@ class Pos {
 	}
 }
 
-class Symbol { 
+class Symbol {
 	public int sym; //identifies the token class just matched
 	public CSXToken value; //contains token information beyond the identity
 	public Symbol(int tokenType, CSXToken theToken) {
@@ -68,26 +66,24 @@ class Symbol {
 	}
 }
 
+
 %%
 
 DIGIT=[0-9]
-//IDENTIFIER = [:jletter:][:jletterdigit:]*
 IDENTIFIER = [A-Za-z0-9]
-//MULTICOMMENT=([#]+[^#]|[^#])*
 MULTICOMMENT=[#][^#]|[^#]
-
-
 
 %type Symbol
 %eofval{
   return new Symbol(sym.EOF, new CSXToken(0,0));
 %eofval}
 
-
 %%
 
+
+/* Integer Literals */
 ("~"{DIGIT}+)|({DIGIT}+)	{
-	Pos.setpos(); Pos.col += yytext().length();
+  Pos.setpos(); Pos.col += yytext().length();
   double  tempdouble;
   if (yytext().startsWith("~")){
     String tempstr = yytext().substring(1);
@@ -101,7 +97,7 @@ MULTICOMMENT=[#][^#]|[^#]
       return new Symbol(sym.INTLIT,
 	  new CSXIntLitToken((-1)*Integer.parseInt(tempstr),Pos.linenum,Pos.colnum));
   }
-	else {
+  else {
     tempdouble = Double.parseDouble(yytext());
     if (tempdouble > Integer.MAX_VALUE) {
        System.out.println("********ERROR: The value below is larger than MAX_VALUE, it has been replaced by MAX_VALUE");
@@ -114,8 +110,7 @@ MULTICOMMENT=[#][^#]|[^#]
   }
 }
 
-
-//multi-line comment
+/* Multi-Line Comment */
 ("##"{MULTICOMMENT}*"##") {
   Pos.setpos();
   Pos.col += yytext().length();
@@ -130,21 +125,20 @@ MULTICOMMENT=[#][^#]|[^#]
         count_tab++;
         position_tab = tempstr.indexOf("\t", position_tab) + 1;
     }
-    Pos.col = tempstr.length() - position + 1 + count_tab * 3;
+    Pos.col = tempstr.length() - position + 1 + count_tab * 7;
   }
   Pos.line += count;
   return new Symbol(sym.MULTICOM, new
     CSXToken(Pos.linenum, Pos.colnum));
 }
 
-//single line comment
+/* Single Line Comment */
 ("/""/"([^\n])*"\n") {
   Pos.line += 1;
   Pos.col = 1;
 }
 
-
-/***********************other tokens**********************/
+/* Other Tokens */
 "(" {
   Pos.setpos();
   Pos.col += 1;
@@ -167,24 +161,24 @@ MULTICOMMENT=[#][^#]|[^#]
 }
 
 "+"	{
-	Pos.setpos();
-	Pos.col += 1;
-	return new Symbol(sym.PLUS,
-		new CSXToken(Pos.linenum,Pos.colnum));
+  Pos.setpos();
+  Pos.col += 1;
+  return new Symbol(sym.PLUS,
+	new CSXToken(Pos.linenum,Pos.colnum));
 }
 
-"!="	{
-	Pos.setpos();
-	Pos.col +=2;
-	return new Symbol(sym.NOTEQ,
-		new CSXToken(Pos.linenum,Pos.colnum));
+"!=" {
+  Pos.setpos();
+  Pos.col +=2;
+  return new Symbol(sym.NOTEQ,
+	new CSXToken(Pos.linenum,Pos.colnum));
 }
 
 ";"	{
-	Pos.setpos();
-	Pos.col +=1;
-	return new Symbol(sym.SEMI,
-		new CSXToken(Pos.linenum,Pos.colnum));
+  Pos.setpos();
+  Pos.col +=1;
+  return new Symbol(sym.SEMI,
+	new CSXToken(Pos.linenum,Pos.colnum));
 }
 
 "[" {
@@ -306,7 +300,7 @@ MULTICOMMENT=[#][^#]|[^#]
     new CSXToken(Pos.linenum,Pos.colnum));
 }
 
-/*************************reserved words***************************/
+/* Reserved Words */
 (b|B)(o|O)(o|0)(l|L) {
   Pos.setpos();
   Pos.col += 4;
@@ -326,7 +320,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 4;
   return new Symbol(sym.rw_CHAR,
 	  new CSXStringLitToken("char",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (c|C)(l|L)(a|A)(s|S)(s|S) {
@@ -334,7 +328,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 5;
   return new Symbol(sym.rw_CLASS,
 	  new CSXStringLitToken("class",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (c|C)(o|O)(n|N)(s|S)(t|T) {
@@ -342,7 +336,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 5;
   return new Symbol(sym.rw_CONST,
 	  new CSXStringLitToken("const",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (c|C)(o|O)(n|N)(t|T)(i|I)(n|N)(u|U)(e|E) {
@@ -350,7 +344,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 8;
   return new Symbol(sym.rw_CONTINUE,
 	  new CSXStringLitToken("continue",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (e|E)(l|L)(s|S)(e|E) {
@@ -358,7 +352,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 4;
   return new Symbol(sym.rw_ELSE,
 	  new CSXStringLitToken("else",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (f|F)(a|A)(l|L)(s|S)(e|E) {
@@ -366,7 +360,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 5;
   return new Symbol(sym.rw_FALSE,
 	  new CSXStringLitToken("false",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (i|I)(f|F) {
@@ -374,7 +368,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 2;
   return new Symbol(sym.rw_IF,
 	  new CSXStringLitToken("if",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (i|I)(n|N)(t|T) {
@@ -382,7 +376,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 3;
   return new Symbol(sym.rw_INT,
 	  new CSXStringLitToken("int",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (r|R)(e|E)(a|A)(d|D) {
@@ -390,7 +384,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 4;
   return new Symbol(sym.rw_READ,
 	  new CSXStringLitToken("read",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (r|R)(e|E)(t|T)(u|U)(r|R)(n|N) {
@@ -398,7 +392,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 6;
   return new Symbol(sym.rw_RETURN,
 	  new CSXStringLitToken("return",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (t|T)(r|R)(u|U)(e|E) {
@@ -406,7 +400,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 4;
   return new Symbol(sym.rw_TRUE,
 	  new CSXStringLitToken("true",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (v|V)(o|O)(i|I)(d|D) {
@@ -414,7 +408,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 4;
   return new Symbol(sym.rw_VOID,
 	  new CSXStringLitToken("void",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (w|W)(h|H)(i|I)(l|L)(e|E) {
@@ -422,7 +416,7 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 5;
   return new Symbol(sym.rw_WHILE,
 	  new CSXStringLitToken("while",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
 (p|P)(r|R)(i|I)(n|N)(t|T) {
@@ -430,20 +424,19 @@ MULTICOMMENT=[#][^#]|[^#]
   Pos.col += 5;
   return new Symbol(sym.rw_PRINT,
 	  new CSXStringLitToken("print",
-			Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
-
-/**********************ientifiers********************/
+/* Ientifiers */
 [A-Za-z]{IDENTIFIER}* {
- 	Pos.setpos();
+  Pos.setpos();
   Pos.col += yytext().length();
   return new Symbol(sym.IDENTIFIER,
 	  new CSXStringLitToken(yytext(),
-			  Pos.linenum,Pos.colnum));
+		Pos.linenum,Pos.colnum));
 }
 
-/***********************String Literals***************/
+/* String Literals */
 "\""([^\"\\]|\\t|\\n|\\\\|\\\")*"\"" {
   Pos.setpos();
   Pos.col += yytext().length();
@@ -452,7 +445,7 @@ MULTICOMMENT=[#][^#]|[^#]
         Pos.linenum,Pos.colnum));
 }
 
-/*********************Character Literals*****************/
+/* Character Literals */
 "'"([^\\'\040]|\\'|\\n|\\t|\\\\)"'" {
   Pos.setpos();
   Pos.col += 1;
@@ -461,18 +454,21 @@ MULTICOMMENT=[#][^#]|[^#]
         Pos.linenum,Pos.colnum));
 }
 
+/* White Space */
 \t  {
-  Pos.col += 4;
+  Pos.col += 8;
 }
 
 \n	{
-	Pos.line += 1;
-	Pos.col = 1;
-}
-" "	{
-	Pos.col += 1;
+  Pos.line += 1;
+  Pos.col = 1;
 }
 
+" "	{
+  Pos.col += 1;
+}
+
+/* Invalid Tokens */
 [^] {
   Pos.setpos();
   Pos.col += yytext().length();

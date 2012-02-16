@@ -1,48 +1,63 @@
-class test {
-## sample test prog for proj #2 (scanner) --
-   may not parse,  type-check or execute
-   correctly ##
+###
+ # This is the test data for assignment 2
+ ##
 
-int i = 0 ## init to 0##;
-int j = ~123;
-int bigPos = 11111111111111111111111111111111111111;
-int bigNeg = ~2222222222222222222222222222222222222;
-bool ja = true;
-bool nein = false;
-char c = 'c';
-char nl = '\n';
-char tab = '\t';
-char bslash = '\\';
-char tic = '\'';
-CONST ten = 10;
-int ar[100];
+Class Test {
+   int firstInt, intNumber;
+   INT theLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooogerInt;
+   inT array[10];
 
-void p(INT j) {##
-	##print("Ans = ", j+1, "\n");
+   Bool isTrue, isFalse;
+
+   CHAr c;
+
+   firstInt = ~012; // ~012 equals to ~12
+
+   intNumber = 999999999999999999999999999999999999999999999999999999999999999999;
+
+   const i = ~11111111111111111111111111111111111111111111111111111111111111111111111111;
+
+   string01 = "string\"01\t01\n\\";
+
+   string02 = "\\\\\n\t\"";
+
+   c = '\n';
+
+   02c = '\t'; // 02c is not a identifier. 02 is a interer literal, c is a identifiers;
+
+   c03 = '"';
+
+   c04 = ' ';  // a blank should not be used within character. It will generate error here
+
+   c05 = '\'';
+		c06 = 'ab';
+
+   if ((firstInt != intNumber)  || (intNumber == c)) {
+		i=~~120;
+		for (i = 100; i >= ~100; i=i-10 ) {
+			i =  (arrar[10] + i) / i;
+			print(i, "\n");  read(i);}
+   }
+
+   for (i = ~123; i != 0; i = i * i) {
+        isFalse = FLASe; ##here are comments
+                 #new line## isTure = TURE;
+        if (i < 0 &&i!=0)
+			return;
+		else
+			continue;
 }
 
-int f(int i){
-        ar[i] = 100;
-	ReturN i+1;
+	void main() {
+		while (TURE)
+		  print("true");  // It will gengerate error here
+		  break;	
+	}
+
+	string03 = "1234567890*0987654321%%1234567890$098765432112345+++++++~~~~~~~~~~~\n";
+
+    $$$+  ~~~ = ?;
+
+    return;
+
 }
-
-read(b);
-
-if (b || true)
-	b = b && false;
-else	b = !(b || true);
-
-L: while (i != 0) {
-	i = i*i/2; break L;
-	i = i/(i-2); continue L
-}
-  
-if (i == 10 || i < 21 || i > ~17 || i != 123) {
-	Print( i);
-	p(17);
-}
-
-if (i >= f(~3) || i <= f(i-1))
-	print( i , f(i) , "\n");
-
-} // That's all folks

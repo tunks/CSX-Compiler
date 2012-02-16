@@ -18,6 +18,8 @@ CLASSPATH = $(DESTPATH)
 VPATH = $(DESTPATH)
 JCFLAGS = -Xlint:all -deprecation -classpath $(CLASSPATH) -d $(DESTPATH)
 JFLAGS = -classpath $(CLASSPATH)
+INPUTFILE = -g
+INPUTFILE = test.csx
 
 %.class: %.java
 	javac $(JCFLAGS) $<
@@ -35,8 +37,8 @@ Yylex.java: csx.jlex
 # test
 ###
 
-test:   P2.class Yylex.class tiny.csx
-	java $(JFLAGS) P2 test.csx
+test:   P2.class Yylex.class $(INPUTFILE)
+	java $(JFLAGS) P2 $(INPUTFILE)
 
 ###
 # style check

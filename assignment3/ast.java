@@ -48,18 +48,17 @@ class nullNode extends ASTNode {
 class csxLiteNode extends ASTNode {
 // This node is used to root CSX lite programs 
 	
-	csxLiteNode(stmtsNode stmts, int line, int col) {
-		super(line, col);
-		progStmts = stmts;
+	csxLiteNode(classNode pclass) {
+		progClass = pclass;
 	} // csxLiteNode() 
 
 	void Unparse(int indent) {
-		System.out.println(linenum + ":" + " {");
-		progStmts.Unparse(1);
-		System.out.println(linenum + ":" + " } EOF");
+		//System.out.println(linenum + ":");
+		progClass.Unparse(0);
+		//System.out.println(linenum + ":" + " } EOF");
 	} // Unparse()
 
-	private final stmtsNode progStmts;
+	private final classNode progClass;
 } // class csxLiteNode
 
 class classNode extends ASTNode {
@@ -69,6 +68,14 @@ class classNode extends ASTNode {
 		className = id;
 		members = memb;
 	} // classNode
+
+    void Unparse(int indent) {
+      System.out.print(linenum + ":" + " class ");
+      className.Unparse(0);
+      System.out.println(" {");
+      members.Unparse(1);
+      System.out.println(linenum + ":" + " } EOF");
+    }
 
 	private final identNode className;
 	private final memberDeclsNode members;
@@ -80,6 +87,14 @@ class memberDeclsNode extends ASTNode {
 		fields = f;
 		methods = m;
 	}
+
+
+    void Unparse(int indent) {
+      fields.Unparse(indent);
+      methods.Unparse(indent);
+    }
+
+
 	fieldDeclsNode fields;
 	private final methodDeclsNode methods;
 } // class memberDeclsNode
@@ -93,6 +108,12 @@ class fieldDeclsNode extends ASTNode {
 		thisField = d;
 		moreFields = f;
 	}
+
+    void Unparse(int indent) {
+      thisFiled.Unparse(indent);
+      moreFields.Unparse(indent);
+    }
+
 	static nullFieldDeclsNode NULL = new nullFieldDeclsNode();
 	private declNode thisField;
 	private fieldDeclsNode moreFields;
@@ -537,6 +558,12 @@ class binaryOpNode extends exprNode {
 			case sym.MINUS:
 				System.out.print(" - ");
 				break;
+            case sym.TIMES:
+                System.out.print(" * ");
+                break;
+            case syn.SLASH:
+                System.out.print(" \ ");
+                break;
 			default:
 				throw new Error("printOp: case not found");
 		}

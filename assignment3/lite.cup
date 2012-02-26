@@ -1,7 +1,7 @@
 /***
  *
- * This is a Java CUP Specification For CSX-lite, a Small Subset
- * of The CSX Language,  Prepared by Charles Fischer.
+ * This is a Java CUP Specification For CSX-lite, a Complete Set
+ * of The CSX Language.
  *
  ***/
 
@@ -21,8 +21,17 @@ scan with {: return Scanner.next_token(); :};
 
 /* Terminals (tokens returned by the scanner). */
 terminal CSXIdentifierToken     IDENTIFIER;
-terminal CSXToken     		SEMI, LPAREN, RPAREN, ASG, LBRACE, RBRACE;
-terminal CSXToken     		PLUS, MINUS, rw_IF;
+terminal CSXIntLitToken         INTLIT;
+terminal CSXCharLitToken        CHARLIT;
+terminal CSXStringLitToken      STRLIT;
+terminal CSXToken     		    SEMI, LPAREN, RPAREN, ASG, LBRACE, RBRACE;
+terminal CSXToken     		    PLUS, MINUS, LBRACKET, GT, CAND, LT, LEQ;
+terminal CSXToken               TIMES, COMMA, GEQ, SLASH, NOTEQ, RBRACKET;
+terminal CSXToken               EQ, NOT, COLON, COR, EOF, error, MULTICOM;
+terminal CSXStringLitToken      rw_CLASS, rw_IF, rw_CONST, rw_RETURN;
+terminal CSXStringLitToken      rw_READ, rw_INT, rw_FALSE, rw_ELSE, rw_TRUE;
+terminal CSXStringLitToken      rw_WRITE, rw_BOOL, rw_BREAK, rw_CONTINUE;
+terminal CSXStringLitToken      rw_VOID, rw_PRINT, rw_WHILE, rw_CHAR;
 
 /* Non terminals */
 non terminal csxLiteNode     	prog;
@@ -31,6 +40,14 @@ non terminal stmtNode	     	stmt;
 non terminal exprNode		exp;
 non terminal nameNode	     	ident;
 
+/* Precedences */
+precedence left         CAND, COR;
+precedence nonassoc     EQ, NOTEQ, LT, LEQ, GT, GEQ;
+precedence left         PLUS, MINUS;
+precedence left         TIMES, SLASH;
+precedence right        NOT;
+
+/* The grammar */
 start with prog;
 
 prog		::= LBRACE:l stmts:s RBRACE
@@ -54,7 +71,7 @@ stmt		::= ident:id ASG exp:e SEMI
 			 RESULT=new ifThenNode(e,s,stmtNode.NULL,
 						i.linenum,i.colnum); :}	
 		;
-exp		::= exp:leftval PLUS:op ident:rightval
+exp		    ::= exp:leftval PLUS:op ident:rightval
 			 {: RESULT=new binaryOpNode(leftval,sym.PLUS,rightval,op.linenum,op.colnum); :}	
 		| exp:leftval MINUS:op ident:rightval
 			 {: RESULT=new binaryOpNode(leftval,sym.MINUS,rightval,op.linenum,op.colnum); :}	

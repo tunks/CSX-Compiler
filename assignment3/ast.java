@@ -88,14 +88,22 @@ class memberDeclsNode extends ASTNode {
 		methods = m;
 	}
 
+    memberDeclsNode(fieldDeclsNode f, memberDeclsNode m, int line, int col) {
+      super(line, col);
+      fields = f;
+      moremembers = m;
+    }
+
 
     void Unparse(int indent) {
       fields.Unparse(indent);
+      moremembers.Unparse(indent);
       methods.Unparse(indent);
     }
 
 
 	fieldDeclsNode fields;
+    private memberDeclsNode moremembers;
 	private final methodDeclsNode methods;
 } // class memberDeclsNode
 
@@ -216,6 +224,24 @@ class voidTypeNode extends typeNode {
 		super(line, col);
 	}
 } // class voidTypeNode
+
+class optionalSemiNode extends ASTNde {
+  optionalSemiNode() {
+    super();
+  }
+  optionalSemiNode(int semi, int line, int col) {
+    super(line, col);
+    semisym = semi;
+  }
+  private final int semisym;
+  private nullOptionalSemiNode NULL = new nullOptionalSemiNode();
+} // optionalSemiNode class
+
+class nullOptionalSemiNode extends optionalSemiNode {
+  nulloptionalSemiNode() {};
+  boolean isNull() {return true};
+  void Unparse(int indent) {}
+} // nullOptionalSemiNode class
 
 class methodDeclsNode extends ASTNode {
 	methodDeclsNode() {
@@ -528,10 +554,16 @@ abstract class exprNode extends ASTNode {
 	exprNode() {
 		super();
 	}
-	exprNode(int l, int c) {
+	exprNode(exprNode e1, int op, relationOpNode e2, int l, int c) {
 		super(l, c);
+        expr = e1;
+        term = e2;
+        operatorCode = op;
 	}
 	static nullExprNode NULL = new nullExprNode();
+    private final exprNode expr;
+    private final relationOpNode term;
+    private final int operatorCode;
 }
 
 class nullExprNode extends exprNode {
@@ -541,6 +573,35 @@ class nullExprNode extends exprNode {
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
 } // class nullExprNode 
+
+class relationOpNode extends exprNode {
+    relationOpNode(factorNode f1, int op, factorNode f2, int line, int col) {
+        super(line, col);
+        firstFactor = f1;
+        secondFactor = f2;
+        operatorCode = op;
+
+    }
+
+    private final factorNode firstFactor;
+    private final factorNode secondFactor;
+    private final int operatorCode;
+} // class relationOpNode
+
+class factorNode extends exprNode {
+    factorNode() {
+      super();
+    }
+    static nullFactorNode NULL = new nullFactorNode();
+} // class factorNode
+
+class nullFactorNode extends factorNode {
+    nullFactorNode() {
+      super();
+    }
+    boolean isNull() {return true;}
+    void Unparse(int indent) {}
+}
 
 class binaryOpNode extends exprNode {
 	binaryOpNode(exprNode e1, int op, exprNode e2, int line, int col) {
@@ -562,7 +623,7 @@ class binaryOpNode extends exprNode {
                 System.out.print(" * ");
                 break;
             case syn.SLASH:
-                System.out.print(" \ ");
+                System.out.print(" / ");
                 break;
 			default:
 				throw new Error("printOp: case not found");

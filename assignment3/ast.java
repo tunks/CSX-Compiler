@@ -82,17 +82,15 @@ class classNode extends ASTNode {
 } // class classNode
 
 class memberDeclsNode extends ASTNode {
-	memberDeclsNode(fieldDeclsNode f, methodDeclsNode m, int line, int col) {
+    memberDeclsNode () {
+      super();
+    }
+	memberDeclsNode(declNode f, methodDeclsNode m, memberDeclsNode mm, int line, int col) {
 		super(line, col);
 		fields = f;
 		methods = m;
+        moremembers = mm;
 	}
-
-    memberDeclsNode(fieldDeclsNode f, memberDeclsNode m, int line, int col) {
-      super(line, col);
-      fields = f;
-      moremembers = m;
-    }
 
 
     void Unparse(int indent) {
@@ -102,10 +100,17 @@ class memberDeclsNode extends ASTNode {
     }
 
 
-	fieldDeclsNode fields;
+    static nullMemberDeclsNode NULL = new nullMemberDeclsNode();
+	private declNode fields;
     private memberDeclsNode moremembers;
-	private final methodDeclsNode methods;
+	private methodDeclsNode methods;
 } // class memberDeclsNode
+
+class nullMemberDeclsNode extends memberDeclsNode {
+  nullMemberDeclsNode() {};
+  boolean isNull() {return true;}
+  void Unparse(int indent) {}
+}
 
 class fieldDeclsNode extends ASTNode {
 	fieldDeclsNode() {
@@ -118,7 +123,7 @@ class fieldDeclsNode extends ASTNode {
 	}
 
     void Unparse(int indent) {
-      thisFiled.Unparse(indent);
+      thisField.Unparse(indent);
       moreFields.Unparse(indent);
     }
 
@@ -143,7 +148,14 @@ abstract class declNode extends ASTNode {
 	declNode(int l, int c) {
 		super(l, c);
 	}
+    static nullDeclNode NULL = new nullDeclNode();
 } // class declNode
+
+class nullDeclNode extends declNode {
+    nullDeclNode() {}
+    boolean isNull() {return true;}
+    void Unparse(int ident) {}
+}
 
 class varDeclNode extends declNode {
 	varDeclNode(identNode id, typeNode t, exprNode e, int line, int col) {
@@ -225,7 +237,7 @@ class voidTypeNode extends typeNode {
 	}
 } // class voidTypeNode
 
-class optionalSemiNode extends ASTNde {
+class optionalSemiNode extends ASTNode {
   optionalSemiNode() {
     super();
   }
@@ -233,13 +245,13 @@ class optionalSemiNode extends ASTNde {
     super(line, col);
     semisym = semi;
   }
-  private final int semisym;
-  private nullOptionalSemiNode NULL = new nullOptionalSemiNode();
+  private int semisym;
+  static nullOptionalSemiNode NULL = new nullOptionalSemiNode();
 } // optionalSemiNode class
 
 class nullOptionalSemiNode extends optionalSemiNode {
-  nulloptionalSemiNode() {};
-  boolean isNull() {return true};
+  nullOptionalSemiNode() {};
+  boolean isNull() {return true;}
   void Unparse(int indent) {}
 } // nullOptionalSemiNode class
 
@@ -416,7 +428,7 @@ class ifThenNode extends stmtNode {
 
 	private final exprNode condition;
 	private final stmtNode thenPart;
-	private final stmtNode elsePart;
+	private final stmtNode  elsePart;
 } // class ifThenNode 
 
 class whileNode extends stmtNode {
@@ -452,12 +464,13 @@ class nullReadNode extends readNode {
 } // class nullReadNode 
 
 class printNode extends stmtNode {
-	printNode() {}
+	printNode() {super();}
 	printNode(exprNode val, printNode pn, int line, int col) {
 		super(line, col);
 		outputValue = val;
 		morePrints = pn;
 	}
+
 	static nullPrintNode NULL = new nullPrintNode();
 
 	private exprNode outputValue;
@@ -554,28 +567,33 @@ abstract class exprNode extends ASTNode {
 	exprNode() {
 		super();
 	}
-	exprNode(exprNode e1, int op, relationOpNode e2, int l, int c) {
-		super(l, c);
-        expr = e1;
-        term = e2;
-        operatorCode = op;
-	}
+    exprNode(int l, int c) {
+      super(l, c);
+    }
 	static nullExprNode NULL = new nullExprNode();
-    private final exprNode expr;
-    private final relationOpNode term;
-    private final int operatorCode;
 }
 
 class nullExprNode extends exprNode {
-	nullExprNode() {
-		super();
-	}
+	nullExprNode() {}
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
 } // class nullExprNode 
 
+class booleanOpNode extends exprNode {
+    booleanOpNode(exprNode e, int op, relationOpNode r, int line, int col) {
+      super(line, col);
+      expr = e;
+      term = r;
+      operatorCode = op;
+    }
+
+    private final exprNode expr;
+    private final relationOpNode term;
+    private final int operatorCode;
+} // booleanOpNode class
+
 class relationOpNode extends exprNode {
-    relationOpNode(factorNode f1, int op, factorNode f2, int line, int col) {
+    relationOpNode(exprNode f1, int op, exprNode f2, int line, int col) {
         super(line, col);
         firstFactor = f1;
         secondFactor = f2;
@@ -583,18 +601,24 @@ class relationOpNode extends exprNode {
 
     }
 
-    private final factorNode firstFactor;
-    private final factorNode secondFactor;
+    private final exprNode firstFactor;
+    private final exprNode secondFactor;
     private final int operatorCode;
 } // class relationOpNode
 
 class factorNode extends exprNode {
-    factorNode() {
-      super();
-    }
-    static nullFactorNode NULL = new nullFactorNode();
+    factorNode(exprNode e1, int op, exprNode e2, int line, int col) {
+		super(line, col);
+		operatorCode = op;
+		factor = e1;
+		pri = e2;
+	}
+    //static nullFactorNode NULL = new nullFactorNode();
+    private final exprNode factor;
+    private final exprNode pri;
+    private final int operatorCode;
 } // class factorNode
-
+/*
 class nullFactorNode extends factorNode {
     nullFactorNode() {
       super();
@@ -602,7 +626,7 @@ class nullFactorNode extends factorNode {
     boolean isNull() {return true;}
     void Unparse(int indent) {}
 }
-
+*/
 class binaryOpNode extends exprNode {
 	binaryOpNode(exprNode e1, int op, exprNode e2, int line, int col) {
 		super(line, col);
@@ -622,7 +646,7 @@ class binaryOpNode extends exprNode {
             case sym.TIMES:
                 System.out.print(" * ");
                 break;
-            case syn.SLASH:
+            case sym.SLASH:
                 System.out.print(" / ");
                 break;
 			default:
@@ -690,6 +714,9 @@ class identNode extends exprNode {
 } // class identNode 
 
 class nameNode extends exprNode {
+    nameNode() {
+      super();
+    }
 	nameNode(identNode id, exprNode expr, int line, int col) {
 		super(line, col);
 		varName = id;
@@ -700,9 +727,17 @@ class nameNode extends exprNode {
 		varName.Unparse(0); // Subscripts not allowed in CSX Lite
 	}
 
-	private final identNode varName;
-	private final exprNode subscriptVal;
+    static nullNameNode NULL = new nullNameNode(); 
+	private identNode varName;
+	private exprNode subscriptVal;
 } // class nameNode 
+
+class nullNameNode extends nameNode {
+    nullNameNode() {}
+   	boolean   isNull() {return true;}
+	void Unparse(int indent) {}
+}
+
 
 class intLitNode extends exprNode {
 	intLitNode(int val, int line, int col) {

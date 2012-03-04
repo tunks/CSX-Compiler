@@ -516,6 +516,18 @@ class callNode extends stmtNode {
 		args = a;
 	}
 
+    void Uparse(int indent) {
+        System.out.print(linenum + ":");
+        genIndent(indent+1);
+        methodName.Unparse(0);
+        System.out.print("(");
+        if (args.isNull()){}
+        else {
+            args.Unparse(0);
+        }
+        System.out.println(")");
+    }
+
 	private final identNode methodName;
 	private final argsNode args;
 } // class callNode 
@@ -525,6 +537,12 @@ class returnNode extends stmtNode {
 		super(line, col);
 		returnVal = e;
 	}
+    
+    void Unparse(int indent) {
+        System.out.print(linenum + ":");
+        genIndent(indent+1);
+        System.out.println("return " + ";");
+    }
 
 	private final exprNode returnVal;
 } // class returnNode 
@@ -546,6 +564,11 @@ class breakNode extends stmtNode {
 		label = i;
 	}
 
+    void Unparse(int indent) {
+        System.out.print(linenum + ":");
+        genIndent(indent+1);
+        System.out.println("break " + label + ";");
+    }
 	private final identNode label;
 } // class breakNode 
 
@@ -554,6 +577,12 @@ class continueNode extends stmtNode {
 		super(line, col);
 		label = i;
 	}
+
+    void Unparse(int indent) {
+        System.out.print(linenum + ":");
+        genIndent(indent+1);
+        System.out.println("continue " + label + ";");
+    }
 
 	private final identNode label;
 } // class continueNode 
@@ -565,6 +594,15 @@ class argsNode extends ASTNode {
 		argVal = e;
 		moreArgs = a;
 	}
+
+    void Unparse(int indent) {
+      argVal.Unparse(0);
+      if (moreArgs.isNull()) {}
+      else {
+        System.out.print(",");
+        moreArgs.Unparse(0);
+      }
+    }
 
 	static nullArgsNode NULL = new nullArgsNode();
 	private exprNode argVal;
@@ -620,9 +658,11 @@ class booleanOpNode extends exprNode {
     }
 
     void Unparse(int indent) {
+      //System.out.print("(");
       expr.Unparse(0);
       printOp(operatorCode);
       term.Unparse(0);
+      //System.out.print(")");
     }
 
     private final exprNode expr;
@@ -667,9 +707,11 @@ class relationOpNode extends exprNode {
     }
 
     void Unparse(int indent) {
+        //System.out.print("(");
         firstFactor.Unparse(0);
         printOp(operatorCode);
         secondFactor.Unparse(0);
+        //System.out.print(")");
     }
 
     private final exprNode firstFactor;
@@ -701,9 +743,20 @@ class factorNode extends exprNode {
     }
 
     void Unparse(int indent) {
-      factor.Unparse(0);
-      printOp(operatorCode);
-      pri.Unparse(0);
+      if (operatorCode == -1) {
+        //System.out.print("(");
+        factor.Unparse(0);
+        printOp(operatorCode);
+        pri.Unparse(0);
+        //System.out.print(")");
+      }
+      else {
+        System.out.print("(");
+        factor.Unparse(0);
+        printOp(operatorCode);
+        pri.Unparse(0);
+        System.out.print(")");
+      }
     }
 
     private final exprNode factor;
@@ -721,12 +774,6 @@ class binaryOpNode extends exprNode {
 
 	static void printOp(int op) {
 		switch (op) {
-			case sym.PLUS:
-				System.out.print(" + ");
-				break;
-			case sym.MINUS:
-				System.out.print(" - ");
-				break;
             case sym.TIMES:
                 System.out.print(" * ");
                 break;
@@ -811,6 +858,16 @@ class fctCallNode extends exprNode {
 		methodName = id;
 		methodArgs = a;
 	}
+
+    void Unparse(int indent) {
+      methodName.Unparse(0);
+      System.out.print(" ( ");
+      if (methodArgs.isNull()) {}
+      else {
+        methodArgs.Unparse(0);
+      }
+      System.out.print(" ) ");
+    }
 
 	private final identNode methodName;
 	private final argsNode methodArgs;

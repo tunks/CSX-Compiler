@@ -1,10 +1,11 @@
 class testi {
     int ab = "abcde";
     char c = 'c';
+    int a = a[a];
 
     int a = 1000;
     int cd = (a + b);
-    int ab = ab + cd + de;
+    int ab = ab + cd * de;
     int aa() {
 	    int bb = bbb;
 	    aa  = aa+bb-cc-dd;

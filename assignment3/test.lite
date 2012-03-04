@@ -1,8 +1,19 @@
-{
-	aa  = aa+bb-cc-dd;
-	bb = bbb;
-	if ( id+bb+cc-dd )
-		if ( aaa )
-			ccc=dd;
-	aa = ccc ; 
+class testi {
+    int ab;
+    int cd = (a + b);
+    int ab = ab + cd + de;
+    int aa() {
+	    int bb = bbb;
+	    aa  = aa+bb-cc-dd;
+	    if ( id+bb+cc-dd ) {
+		    if ( aaa ) {
+                print(abc&&cbd,abc||cbd!=abc);
+            }
+            else {
+                ab:while("abcd" || cd+!cd+(int)ab)
+                    read(ab[ab],cd);
+            }
+}
+	    aa = ccc ; 
+    }
 }

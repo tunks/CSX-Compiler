@@ -73,7 +73,7 @@ class classNode extends ASTNode {
       System.out.print(linenum + ":" + " class ");
       className.Unparse(0);
       System.out.println(" {");
-      members.Unparse(1);
+      members.Unparse(0);
       System.out.println(linenum + ":" + " } EOF");
     }
 
@@ -164,6 +164,20 @@ class varDeclNode extends declNode {
 		varType = t;
 		initValue = e;
 	}
+    
+    void Unparse(int indent) {
+      System.out.print(linenum + ":");
+      varType.Unparse(indent+1);
+      System.out.print(" ");
+      varName.Unparse(0);
+      if (initValue.isNull()) {}
+      else {
+        System.out.print(" = ");
+        initValue.Unparse(0);
+      }
+      System.out.println(";");
+    }
+
 
 	private final identNode varName;
 	private final typeNode varType;
@@ -217,24 +231,37 @@ class intTypeNode extends typeNode {
 	intTypeNode(int line, int col) {
 		super(line, col);
 	}
+    void Unparse(int indent) {
+      genIndent(indent);
+      System.out.print("int ");
+    }
 } // class intTypeNode
 
 class boolTypeNode extends typeNode {
 	boolTypeNode(int line, int col) {
 		super(line, col);
 	}
+    void Unparse(int indent) {
+      genIndent(indent);
+      System.out.print("bool ");
+    }
 } // class boolTypeNode
 
 class charTypeNode extends typeNode {
 	charTypeNode(int line, int col) {
 		super(line, col);
 	}
+    void Unparse(int indent) {
+      genIndent(indent);
+      System.out.print("char ");
+    }
 } // class charTypeNode
 
 class voidTypeNode extends typeNode {
 	voidTypeNode(int line, int col) {
 		super(line, col);
 	}
+    void Unparse(int indent) {}
 } // class voidTypeNode
 
 class optionalSemiNode extends ASTNode {
@@ -429,8 +456,7 @@ class ifThenNode extends stmtNode {
 	private final exprNode condition;
 	private final stmtNode thenPart;
 	private final stmtNode  elsePart;
-} // class ifThenNode 
-
+} // class ifThenNode whileNode extends stmtNode {
 class whileNode extends stmtNode {
 	whileNode(exprNode i, exprNode e, stmtNode s, int line, int col) {
 		super(line, col);
@@ -587,6 +613,27 @@ class booleanOpNode extends exprNode {
       operatorCode = op;
     }
 
+    static void printOp(int op) {
+      switch (op) {
+        case sym.COR:
+          System.out.print(" || ");
+          break;
+        case sym.CAND:
+          System.out.print(" && ");
+          break;
+        case -1:
+          break;
+        default:
+          throw new Error("printOp: case not found");
+      }
+    }
+
+    void Unparse(int indent) {
+      expr.Unparse(0);
+      printOp(operatorCode);
+      term.Unparse(0);
+    }
+
     private final exprNode expr;
     private final relationOpNode term;
     private final int operatorCode;
@@ -601,6 +648,39 @@ class relationOpNode extends exprNode {
 
     }
 
+    static void printOp(int op) {
+      switch (op) {
+        case sym.LT:
+          System.out.print(" < ");
+          break;
+        case sym.GT:
+          System.out.print(" > ");
+          break;
+        case sym.LEQ:
+          System.out.print(" <= ");
+          break;
+        case sym.GEQ:
+          System.out.print(" >= ");
+          break;
+        case sym.EQ:
+          System.out.print(" = ");
+          break;
+        case sym.NOTEQ:
+          System.out.print(" != ");
+          break;
+        case -1:
+          break;
+        default:
+          throw new Error("printOp: case not found");
+      }
+    }
+
+    void Unparse(int indent) {
+        firstFactor.Unparse(0);
+        printOp(operatorCode);
+        secondFactor.Unparse(0);
+    }
+
     private final exprNode firstFactor;
     private final exprNode secondFactor;
     private final int operatorCode;
@@ -613,20 +693,33 @@ class factorNode extends exprNode {
 		factor = e1;
 		pri = e2;
 	}
-    //static nullFactorNode NULL = new nullFactorNode();
+    
+    static void printOp(int op) {
+      switch (op) {
+        case sym.PLUS:
+          System.out.print(" + ");
+          break;
+        case sym.MINUS:
+          System.out.print(" - ");
+          break;
+        case -1:
+          break;
+        default:
+          throw new Error("printOp: case not fount");
+      }
+    }
+
+    void Unparse(int indent) {
+      factor.Unparse(0);
+      printOp(operatorCode);
+      pri.Unparse(0);
+    }
+
     private final exprNode factor;
     private final exprNode pri;
     private final int operatorCode;
 } // class factorNode
-/*
-class nullFactorNode extends factorNode {
-    nullFactorNode() {
-      super();
-    }
-    boolean isNull() {return true;}
-    void Unparse(int indent) {}
-}
-*/
+
 class binaryOpNode extends exprNode {
 	binaryOpNode(exprNode e1, int op, exprNode e2, int line, int col) {
 		super(line, col);
@@ -649,17 +742,25 @@ class binaryOpNode extends exprNode {
             case sym.SLASH:
                 System.out.print(" / ");
                 break;
+            case -1:
+                break;
 			default:
 				throw new Error("printOp: case not found");
 		}
 	}
 
 	void Unparse(int indent) {
+      if (operatorCode == -1) {
+        leftOperand.Unparse(0);
+        rightOperand.Unparse(0);
+      }
+      else {
 		System.out.print("(");
 		leftOperand.Unparse(0);
 		printOp(operatorCode);
 		rightOperand.Unparse(0);
 		System.out.print(")");
+      }
 	}
 
 	private final exprNode leftOperand;
@@ -674,6 +775,23 @@ class unaryOpNode extends exprNode {
 		operatorCode = op;
 	}
 
+    static void printOp(int op) {
+        switch (op) {
+          case sym.NOT:
+            System.out.print(" !");
+            break;
+          case -1:
+            break;
+          default:
+            throw new Error("printOp: case not found");
+        }
+    }
+
+    void Unparse(int indent) {
+        printOp(operatorCode);
+        operand.Unparse(0);
+    }
+
 	private final exprNode operand;
 	private final int operatorCode; // Token code of the operator
 } // class unaryOpNode 
@@ -684,6 +802,13 @@ class castNode extends exprNode {
 		operand = e;
 		resultType = t;
 	}
+
+    void Unparse(int indent) {
+      System.out.print("(");
+      resultType.Unparse(0);
+      System.out.print(")");
+      operand.Unparse(0);
+    }
 
 	private final exprNode operand;
 	private final typeNode resultType;
@@ -724,8 +849,18 @@ class nameNode extends exprNode {
 	}
 
 	void Unparse(int indent) {
-		varName.Unparse(0); // Subscripts not allowed in CSX Lite
-	}
+      varName.Unparse(0); // Subscripts not allowed in CSX Lite
+      if (subscriptVal.isNull()) {}
+      else {
+        System.out.print("[");
+        subscriptVal.Unparse(0);
+        System.out.print("]");
+	  }
+    }
+
+    identNode returnVar() {
+      return varName;
+    }
 
     static nullNameNode NULL = new nullNameNode(); 
 	private identNode varName;
@@ -749,12 +884,12 @@ class intLitNode extends exprNode {
 } // class intLitNode 
 
 class charLitNode extends exprNode {
-	charLitNode(char val, int line, int col) {
+	charLitNode(String val, int line, int col) {
 		super(line, col);
 		charval = val;
 	}
 
-	private final char charval;
+	private final String charval;
 } // class charLitNode 
 
 class trueNode extends exprNode {
@@ -768,3 +903,18 @@ class falseNode extends exprNode {
 		super(line, col);
 	}
 } // class falseNode 
+
+class exprUnitNode extends exprNode {
+	exprUnitNode(exprNode e, int line, int col) {
+		super(line, col);
+		expr = e;
+	}
+
+	void Unparse(int indent) {
+		System.out.print("(");
+        expr.Unparse(0);
+        System.out.print(")");
+	}
+
+	private final exprNode expr;
+} // class exprUnitNode 

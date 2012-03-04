@@ -1,5 +1,8 @@
 class testi {
-    int ab;
+    int ab = "abcde";
+    char c = 'c';
+
+    int a = 1000;
     int cd = (a + b);
     int ab = ab + cd + de;
     int aa() {

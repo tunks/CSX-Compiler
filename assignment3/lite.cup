@@ -322,7 +322,7 @@ unit         ::= ident: id
                  new charLitNode(i.charValue, i.linenum, i.colnum); :}
         | STRLIT:i
               {: RESULT = 
-                 new identNode(i.stringText, i.linenum, i.colnum); :}
+                 new strLitNode(i.stringText, i.linenum, i.colnum); :}
         | rw_TRUE:t
               {: RESULT = 
                  new trueNode(t.linenum, t.colnum); :}

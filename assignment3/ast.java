@@ -579,15 +579,6 @@ class nullArgsNode extends argsNode {
 	void Unparse(int indent) {}
 } // class nullArgsNode 
 
-class strLitNode extends exprNode {
-	strLitNode(String stringval, int line, int col) {
-		super(line, col);
-		strval = stringval;
-	}
-
-	private final String strval;
-} // class strLitNode 
-
 // abstract superclass; only subclasses are actually created
 abstract class exprNode extends ASTNode {
 	exprNode() {
@@ -873,6 +864,18 @@ class nullNameNode extends nameNode {
 	void Unparse(int indent) {}
 }
 
+class strLitNode extends exprNode {
+    strLitNode(String val, int line, int col) {
+      super(line, col);
+      strval = val;
+    }
+
+    void Unparse(int indent) {
+      System.out.print(strval);
+    }
+
+    private final String strval;
+} // class strLitNode
 
 class intLitNode extends exprNode {
 	intLitNode(int val, int line, int col) {
@@ -880,6 +883,9 @@ class intLitNode extends exprNode {
 		intval = val;
 	}
 
+    void Unparse(int indent) {
+      System.out.print(intval);
+    }
 	private final int intval;
 } // class intLitNode 
 
@@ -889,6 +895,10 @@ class charLitNode extends exprNode {
 		charval = val;
 	}
 
+    void Unparse(int indent) {
+      System.out.print(charval);
+    }
+
 	private final String charval;
 } // class charLitNode 
 
@@ -896,12 +906,18 @@ class trueNode extends exprNode {
 	trueNode(int line, int col) {
 		super(line, col);
 	}
+    void Unparse(int indent) {
+      System.out.print("true");
+    }
 } // class trueNode 
 
 class falseNode extends exprNode {
 	falseNode(int line, int col) {
 		super(line, col);
 	}
+    void Unparse(int indent) {
+      System.out.print("false");
+    }
 } // class falseNode 
 
 class exprUnitNode extends exprNode {

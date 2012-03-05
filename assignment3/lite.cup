@@ -106,23 +106,24 @@ optionalSemi ::= SEMI:s
         ;
 
 methoddecl   ::= rw_VOID:v ident:id LPAREN RPAREN LBRACE fielddecls:f stmts:s 
-                RBRACE optionalSemi
+                RBRACE optionalSemi:o
               {: RESULT =
                  new methodDeclNode(id.returnVar(), argDeclsNode.NULL, 
-                 new voidTypeNode(v.linenum, v.colnum),f, s, v.linenum, v.colnum); :}
+                 new voidTypeNode(v.linenum, v.colnum),f, s, o, v.linenum, v.colnum); :}
         | rw_VOID:v ident:id LPAREN argdecls:as RPAREN LBRACE fielddecls:f stmts:s 
-                RBRACE optionalSemi
+                RBRACE optionalSemi:o
               {: RESULT = 
                  new methodDeclNode(id.returnVar(), as, new voidTypeNode(v.linenum,
-                 v.colnum), f, s, v.linenum, v.colnum); :}
+                 v.colnum), f, s, o, v.linenum, v.colnum); :}
         | type:t ident:id LPAREN RPAREN LBRACE fielddecls:f stmts:s RBRACE
-                optionalSemi
+                optionalSemi:o
               {: RESULT = 
-                 new methodDeclNode(id.returnVar(), argDeclsNode.NULL, t, f, s, t.linenum, t.colnum); :}
+                 new methodDeclNode(id.returnVar(), argDeclsNode.NULL, t, f, s,
+                 o, t.linenum, t.colnum); :}
         | type:t ident:id LPAREN argdecls:as RPAREN LBRACE fielddecls:f stmts:s
-                RBRACE optionalSemi
+                RBRACE optionalSemi:o
               {: RESULT = 
-                 new methodDeclNode(id.returnVar(), as, t, f, s, t.linenum, t.colnum); :}
+                 new methodDeclNode(id.returnVar(), as, t, f, s, o, t.linenum, t.colnum); :}
         ;
 
 argdecls     ::= argdecl:arg COMMA argdecls:args
@@ -166,10 +167,12 @@ stmts		 ::= stmt:s1  stmts:s2
 
 stmt         ::= rw_IF:i LPAREN expr:e RPAREN LBRACE stmt:s1 RBRACE
               {: RESULT = 
-                 new ifThenNode(e, s1, stmtNode.NULL, i.linenum, i.colnum); :}
-        | rw_IF:i LPAREN expr:e RPAREN LBRACE stmt:s1 RBRACE rw_ELSE LBRACE stmt:s2 RBRACE
+                 new ifThenNode(e, s1, stmtNode.NULL, i.linenum, i.colnum,
+                 i.linenum, i.colnum); :}
+        | rw_IF:i LPAREN expr:e RPAREN LBRACE stmt:s1 RBRACE rw_ELSE:el LBRACE stmt:s2 RBRACE
               {: RESULT = 
-                 new ifThenNode(e, s1, s2, i.linenum, i.colnum); :}
+                 new ifThenNode(e, s1, s2, i.linenum, i.colnum, el.linenum,
+                 el.colnum); :}
         | rw_WHILE:w LPAREN expr:e RPAREN stmt:s
               {: RESULT = 
                  new whileNode(exprNode.NULL, e, s, w.linenum, w.colnum); :}
@@ -203,9 +206,9 @@ stmt         ::= rw_IF:i LPAREN expr:e RPAREN LBRACE stmt:s1 RBRACE
         | rw_CONTINUE:c ident:id SEMI
               {: RESULT = 
                  new continueNode(id.returnVar(), c.linenum, c.colnum); :}
-        | LBRACE:l fielddecls:f stmts:s RBRACE optionalSemi
+        | LBRACE:l fielddecls:f stmts:s RBRACE optionalSemi:o
               {: RESULT = 
-                 new blockNode(f, s, l.linenum, l.colnum); :}
+                 new blockNode(f, s, o, l.linenum, l.colnum); :}
         ;
 
 

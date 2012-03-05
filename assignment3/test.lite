@@ -18,6 +18,10 @@ class testi {
                     read(ab[ab],cd);
             }
 }
+    {
+    int a[31];
+    abd(a);
+}
 	    aa = ccc ; 
     }
 }

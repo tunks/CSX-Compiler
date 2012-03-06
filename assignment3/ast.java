@@ -516,43 +516,57 @@ class asgNode extends stmtNode {
 	private final exprNode source;
 } // class asgNode 
 
+class elseNode extends stmtNode {
+    elseNode(stmtNode s, int line, int col) {
+      super(line,col);
+      elsestmt = s;
+    }
+    elseNode() {}
+
+    void Unparse(int indent) {
+        System.out.print(linenum + ":");
+        genIndent(indent);
+        System.out.println("else " + "{");
+        elsestmt.Unparse(indent+1);
+        System.out.print(linenum + ":");
+        genIndent(indent);
+        System.out.println("}");
+    }
+
+    static nullElseNode NULL = new nullElseNode();
+    private stmtNode elsestmt;
+} // class elseNode
+
+class nullElseNode extends elseNode {
+    nullElseNode() {}
+    boolean  isNull() {return true;}
+    void Unparse(int indent) {}
+} // class nullElseNode
+
 class ifThenNode extends stmtNode {
-	ifThenNode(exprNode e, stmtNode s1, stmtNode s2, int line, int col, int eline, int ecol) {
+	ifThenNode(exprNode e, stmtNode s1, elseNode el, int line, int col) {
 		super(line, col);
 		condition = e;
 		thenPart = s1;
-		elsePart = s2;
-        elselinenum = eline;
-        elsecolnum = ecol;
+		elsePart = el;
 	}
 
 	void Unparse(int indent) {
 		System.out.print(linenum + ":");
 		genIndent(indent);
-		System.out.print("if (");
+		System.out.print("if " + "(");
 		condition.Unparse(0);
-		System.out.println(") {");
+		System.out.println(") " + "{");
 		thenPart.Unparse(indent+1);
         System.out.print(linenum + ":");
         genIndent(indent);
         System.out.println("}");
-        if (elsePart.isNull()) {}
-        else {
-            System.out.print(elselinenum + ":");
-            genIndent(indent);
-            System.out.println("else {");
-            elsePart.Unparse(indent+1);
-            System.out.print(elselinenum + ":");
-            genIndent(indent);
-            System.out.println("}");
-        }
+        elsePart.Unparse(indent);
 	}
 
-    private final int elselinenum;
-    private final int elsecolnum;
 	private final exprNode condition;
 	private final stmtNode thenPart;
-	private final stmtNode  elsePart;
+	private final elseNode elsePart;
 } // class ifThenNode
 class whileNode extends stmtNode {
 	whileNode(exprNode i, exprNode e, stmtNode s, int line, int col) {
@@ -582,19 +596,38 @@ class whileNode extends stmtNode {
 	private final stmtNode loopBody;
 } // class whileNode 
 
+class readListNode extends stmtNode {
+    readListNode(readNode r, int line, int col) {
+        super(line, col);
+        read = r;
+    }
+
+    void Unparse(int indent) {
+        System.out.print(linenum + ":");
+        genIndent(indent);
+        System.out.print("read" + " (");
+        read.Unparse(0);
+        System.out.println(");");
+    }
+
+    private final readNode read;
+} // class readListNode 
+
 class readNode extends stmtNode {
 	readNode() {}
 	readNode(nameNode n, readNode rn, int line, int col) {
-		super(line, col);
+		 super(line, col);
 		 targetVar = n;
 		 moreReads = rn;
 	}
 
-//////////////////////////////////////////
     void Unparse(int indent) {
-        System.out.print(linenum + ":");
-        genIndent(indent);
-        targetVar.Unparse(0);
+        targetVar.Unparse(indent);
+        if (moreReads.isNull()) {}
+        else {
+            System.out.print(", ");
+            moreReads.Unparse(indent);
+        }
     }
 
 	static nullReadNode NULL = new nullReadNode();
@@ -608,6 +641,23 @@ class nullReadNode extends readNode {
 	void Unparse(int indent) {}
 } // class nullReadNode 
 
+class printListNode extends stmtNode {
+   printListNode(printNode p, int line, int col) {
+        super(line, col);
+        print = p;
+   }
+
+   void Unparse(int indent) {
+        System.out.print(linenum + ":");
+        genIndent(indent);
+        System.out.print("print" + " ( ");
+        print.Unparse(0);
+        System.out.println(");");
+   }
+
+   private final printNode print;
+} // class printListNode
+
 class printNode extends stmtNode {
 	printNode() {super();}
 	printNode(exprNode val, printNode pn, int line, int col) {
@@ -615,9 +665,18 @@ class printNode extends stmtNode {
 		outputValue = val;
 		morePrints = pn;
 	}
-//////////////////////////////////////////////
-	static nullPrintNode NULL = new nullPrintNode();
 
+    void Unparse(int indent) {
+        genIndent(indent);
+        outputValue.Unparse(0);
+        if (morePrints.isNull()) {}
+        else {
+            System.out.print(", ");
+            morePrints.Unparse(0);
+        }
+    }
+
+	static nullPrintNode NULL = new nullPrintNode();
 	private exprNode outputValue;
 	private printNode morePrints;
 } // class printNode 

@@ -33,7 +33,7 @@ terminal CSXStringLitToken      rw_READ, rw_INT, rw_FALSE, rw_ELSE, rw_TRUE;
 terminal CSXStringLitToken      rw_BOOL, rw_BREAK, rw_CONTINUE;
 terminal CSXStringLitToken      rw_VOID, rw_PRINT, rw_WHILE, rw_CHAR;
 terminal CSXToken               MULTICOM;
-terminal CSXStringLitToken      rw_WRITE;
+//terminal CSXStringLitToken    rw_WRITE;
 
 /* Non terminals */
 non terminal csxLiteNode     	prog;
@@ -47,10 +47,11 @@ non terminal argDeclNode        argdecl;
 non terminal declNode           fielddecl;
 non terminal stmtsNode     	    stmts;
 non terminal stmtNode	     	stmt;
+non terminal elseNode           elsepart;
 non terminal typeNode           type;
 non terminal argsNode           args;
-non terminal readNode           readlist;
-non terminal printNode          writelist;
+non terminal readNode           read;
+non terminal printNode          write;
 non terminal exprNode           expr;
 non terminal relationOpNode     term;
 non terminal factorNode 		factor;
@@ -165,14 +166,16 @@ stmts		 ::= stmt:s1  stmts:s2
                  new stmtsNode(s1, stmtsNode.NULL, s1.linenum, s1.colnum); :}
         ;
 
-stmt         ::= rw_IF:i LPAREN expr:e RPAREN LBRACE stmt:s1 RBRACE
+elsepart     ::= rw_ELSE:el LBRACE stmt:s RBRACE
               {: RESULT = 
-                 new ifThenNode(e, s1, stmtNode.NULL, i.linenum, i.colnum,
-                 i.linenum, i.colnum); :}
-        | rw_IF:i LPAREN expr:e RPAREN LBRACE stmt:s1 RBRACE rw_ELSE:el LBRACE stmt:s2 RBRACE
+                 new elseNode(s, el.linenum, el.colnum); :}
+        | 
+              {: RESULT = elseNode.NULL; :}
+        ;
+
+stmt         ::= rw_IF:i LPAREN expr:e RPAREN LBRACE stmt:s1 RBRACE elsepart:el
               {: RESULT = 
-                 new ifThenNode(e, s1, s2, i.linenum, i.colnum, el.linenum,
-                 el.colnum); :}
+                 new ifThenNode(e, s1, el, i.linenum, i.colnum); :}
         | rw_WHILE:w LPAREN expr:e RPAREN stmt:s
               {: RESULT = 
                  new whileNode(exprNode.NULL, e, s, w.linenum, w.colnum); :}
@@ -182,12 +185,12 @@ stmt         ::= rw_IF:i LPAREN expr:e RPAREN LBRACE stmt:s1 RBRACE
         | name:n ASG expr:e SEMI
               {: RESULT = 
                  new asgNode(n, e, n.linenum, n.colnum); :}
-        | rw_READ LPAREN readlist:n RPAREN SEMI
+        | rw_READ LPAREN read:n RPAREN SEMI
               {: RESULT = 
-                 new readNode(nameNode.NULL, n, n.linenum, n.colnum); :}
-        | rw_PRINT LPAREN writelist:p RPAREN SEMI
+                 new readListNode(n, n.linenum, n.colnum); :}
+        | rw_PRINT LPAREN write:p RPAREN SEMI
               {: RESULT = 
-                 new printNode(exprNode.NULL, p, p.linenum, p.colnum); :}
+                 new printListNode(p, p.linenum, p.colnum); :}
         | ident:id LPAREN RPAREN SEMI
               {: RESULT = 
                  new callNode(id.returnVar(), argsNode.NULL, id.linenum, id.colnum); :}
@@ -228,7 +231,7 @@ args         ::= expr:e COMMA args:a
                  new argsNode(e, argsNode.NULL, e.linenum, e.colnum); :}
         ;
 
-readlist     ::= name:n COMMA readlist:r
+read         ::= name:n COMMA read:r
               {: RESULT = 
                  new readNode(n, r, n.linenum, n.colnum); :}
         | name:n
@@ -236,7 +239,7 @@ readlist     ::= name:n COMMA readlist:r
                  new readNode(n, readNode.NULL, n.linenum, n.colnum); :}
         ;
 
-writelist    ::= expr:e COMMA writelist:w
+write        ::= expr:e COMMA write:w
               {: RESULT = 
                  new printNode(e, w, e.linenum, e.colnum); :}
         | expr:e

@@ -1,3 +1,5 @@
+##this is##
+
 class testi {
     int ab = "abcde";
     char c = 'c';
@@ -15,7 +17,7 @@ class testi {
             }
             else {
                 ab:while("abcd" || cd+!cd+(int)ab)
-                    read(ab[ab],cd);
+                    read(ab[ab],cd,de);
             }
 }
     {

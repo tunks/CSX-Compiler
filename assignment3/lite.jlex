@@ -13,7 +13,7 @@ class CSXToken {
 class CSXIntLitToken extends CSXToken {
 	int intValue;
 	CSXIntLitToken(int val,int line,int col) {
-	   super(line,col);intValue=val; 
+	   super(line,col);intValue=val;
 	};
 }
 
@@ -30,6 +30,7 @@ class CSXCharLitToken extends CSXToken {
 	String charValue;
 	CSXCharLitToken(String val,int line,int col) {
 		super(line,col);charValue=val;
+
 	}
 }
 
@@ -92,7 +93,6 @@ MULTICOMMENT=[#][^#]|[^#]
     String tempstr = yytext().substring(1);
     tempdouble = Double.parseDouble(tempstr) * (-1);
     if (tempdouble < Integer.MIN_VALUE) {
-       System.out.println("********ERROR: The value below is smaller than MIN_VALUE, it has been replaced by MIN_VALUE");
        return new Symbol(sym.INTLIT,
 	       new CSXIntLitToken(Integer.MIN_VALUE,Pos.linenum,Pos.colnum));
     }
@@ -103,7 +103,6 @@ MULTICOMMENT=[#][^#]|[^#]
   else {
     tempdouble = Double.parseDouble(yytext());
     if (tempdouble > Integer.MAX_VALUE) {
-       System.out.println("********ERROR: The value below is larger than MAX_VALUE, it has been replaced by MAX_VALUE");
        return new Symbol(sym.INTLIT,
 		      new CSXIntLitToken(Integer.MAX_VALUE,Pos.linenum,Pos.colnum));
     }
@@ -430,7 +429,7 @@ MULTICOMMENT=[#][^#]|[^#]
 		Pos.linenum,Pos.colnum));
 }
 
-/* Ientifiers */
+/* Identifiers */
 [A-Za-z]{IDENTIFIER}* {
   Pos.setpos();
   Pos.col += yytext().length();
@@ -440,7 +439,7 @@ MULTICOMMENT=[#][^#]|[^#]
 }
 
 /* String Literals */
-"\""([^\"\\]|\\t|\\n|\\\\|\\\")*"\"" {
+"\""([^\"\\]|\\t|\\\\|\\\")*"\"" {
   Pos.setpos();
   Pos.col += yytext().length();
   return new Symbol(sym.STRLIT,

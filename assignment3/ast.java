@@ -216,7 +216,7 @@ class arrayDeclNode extends declNode {
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
-        genIndent(indent+1);
+        genIndent(indent);
         elementType.Unparse(0);
         System.out.print(" ");
         arrayName.Unparse(0);
@@ -588,7 +588,11 @@ class whileNode extends stmtNode {
         System.out.print(" (");
         condition.Unparse(0);
         System.out.println(")");
-        loopBody.Unparse(indent+1);
+        if (label.isNull()) {
+            loopBody.Unparse(indent+1);
+        } else {
+            loopBody.Unparse(indent);
+        }
     }
 
 	private final exprNode label;
@@ -696,7 +700,7 @@ class callNode extends stmtNode {
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
-        genIndent(indent+1);
+        genIndent(indent);
         methodName.Unparse(0);
         System.out.print("(");
         args.Unparse(0);
@@ -716,7 +720,9 @@ class returnNode extends stmtNode {
     void Unparse(int indent) {
         System.out.print(linenum + ":");
         genIndent(indent);
-        System.out.println("return " + ";");
+        System.out.print("return ");
+        returnVal.Unparse(0);
+        System.out.println(";");
     }
 
 	private final exprNode returnVal;
@@ -734,8 +740,8 @@ class blockNode extends stmtNode {
         System.out.print(linenum + ":");
         genIndent(indent);
         System.out.println("{");
-        decls.Unparse(indent);
-        stmts.Unparse(indent);
+        decls.Unparse(indent+1);
+        stmts.Unparse(indent+1);
         System.out.print(linenum + ":");
         genIndent(indent);
         System.out.print("}");
@@ -756,8 +762,10 @@ class breakNode extends stmtNode {
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
-        genIndent(indent+1);
-        System.out.println("break " + label + ";");
+        genIndent(indent);
+        System.out.print("break ");
+        label.Unparse(0);
+        System.out.println(";");
     }
 	private final identNode label;
 } // class breakNode 
@@ -770,8 +778,10 @@ class continueNode extends stmtNode {
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
-        genIndent(indent+1);
-        System.out.println("continue " + label + ";");
+        genIndent(indent);
+        System.out.print("continue ");
+        label.Unparse(0);
+        System.out.println(";");
     }
 
 	private final identNode label;
@@ -884,7 +894,7 @@ class relationOpNode extends exprNode {
           System.out.print(" >= ");
           break;
         case sym.EQ:
-          System.out.print(" = ");
+          System.out.print(" == ");
           break;
         case sym.NOTEQ:
           System.out.print(" != ");

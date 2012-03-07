@@ -65,3 +65,4 @@ lint: all
 
 clean: 
 	rm -f $(DESTPATH)/*.class Yylex.java* sym.java parser.java
+

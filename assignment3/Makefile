@@ -14,7 +14,6 @@
 ###
 
 DESTPATH = ./classes
-#CUPPATH = /homes/raphael/courses/cs541/public/cup
 CUPPATH = /Users/chenliu/vim-git/compiler-design/public/java_cup
 CLASSPATH = $(DESTPATH):$(CUPPATH)/java-cup-10k.jar
 VPATH = $(DESTPATH)

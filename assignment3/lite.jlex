@@ -130,8 +130,8 @@ MULTICOMMENT=[#][^#]|[^#]
     Pos.col = tempstr.length() - position + 1 + count_tab * 7;
   }
   Pos.line += count;
-  return new Symbol(sym.MULTICOM, new
-    CSXToken(Pos.linenum, Pos.colnum));
+/*  return new Symbol(sym.MULTICOM, new
+      CSXToken(Pos.linenum, Pos.colnum)); */
 }
 
 /* Single Line Comment */

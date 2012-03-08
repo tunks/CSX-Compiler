@@ -1,4 +1,5 @@
-
+##this is multicomment
+#multi##
 class testi {
     int ab = 9999999999999999999999999999999;
     char c = 'c';

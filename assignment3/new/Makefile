@@ -20,8 +20,6 @@ CLASSPATH = $(DESTPATH):$(CUPPATH)/java-cup-10k.jar
 VPATH = $(DESTPATH)
 JCFLAGS = -Xlint:all -deprecation -classpath $(CLASSPATH) -d $(DESTPATH)
 JFLAGS = -classpath $(CLASSPATH)
-FILENAME = -g
-FILENAME = test.lite
 
 %.class: %.java
 	javac $(JCFLAGS) $<
@@ -42,7 +40,7 @@ ASTNode.class: ast.java sym.class
 P3.class: Yylex.class Scanner.class parser.class ASTNode.class
 
 test: all
-	java $(JFLAGS) P3 $(FILENAME)
+	java $(JFLAGS) P3 test.lite
 
 ###
 # style check

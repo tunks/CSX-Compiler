@@ -1,0 +1,39 @@
+
+class testi {
+    int ab = 9999999999999999999999999999999;
+    char c = 'c';
+    int a = a[10];  int a = ~1000;
+    int cd = (a + b);
+    const ab = ab + cd * de;
+
+
+    int aa() {
+	    int bb = bbb;
+	    aa  = aa+bb-cc-dd;
+	    if ( id+bb+cc-dd ) {
+		    if ( aaa ) {
+                print(abc&&cbd,abc||cbd!=abc);
+            }
+            else {
+                ab:while("abcd" || cd+!cd+(int)ab)
+                    read(ab[ab],cd,de);
+            }
+        }
+        {
+            int a[31];
+            abd(a);
+        }
+	    aa = ccc ; 
+        return aa*ccc;
+    };
+
+    void abcd(char c, int a[]) {
+        cd[10*3+1] = !aa() && (int) "abcdefg" || (~1111111111111111111111) >= 0;
+        i = cd[10] * cd[10] * a[10];
+        label:while (cd[5]< cd[i]/cd[i+1]) {
+            i = i + 32 / 4;
+            if (i == true) { break label;} else { continue label;}
+        }
+    return;
+    }
+}

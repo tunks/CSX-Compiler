@@ -1,0 +1,9 @@
+class invalid {
+    int a;
+    int b = 1;
+    void func {
+       if (b == 1) {
+        print(a);
+       }
+    };
+}

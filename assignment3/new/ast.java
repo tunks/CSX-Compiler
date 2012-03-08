@@ -53,7 +53,9 @@ class csxLiteNode extends ASTNode {
 	} // csxLiteNode() 
 
 	void Unparse(int indent) {
+		//System.out.println(linenum + ":");
 		progClass.Unparse(0);
+		//System.out.println(linenum + ":" + " } EOF");
 	} // Unparse()
 
 	private final classNode progClass;
@@ -609,7 +611,7 @@ class readListNode extends stmtNode {
         genIndent(indent);
         System.out.print("read" + " (");
         read.Unparse(0);
-        System.out.println(" );");
+        System.out.println(");");
     }
 
     private final readNode read;
@@ -654,7 +656,7 @@ class printListNode extends stmtNode {
         genIndent(indent);
         System.out.print("print" + " ( ");
         print.Unparse(0);
-        System.out.println(" );");
+        System.out.println(");");
    }
 
    private final printNode print;

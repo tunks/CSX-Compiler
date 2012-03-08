@@ -6,7 +6,7 @@ class P3 {
 	public static void main(String args[]) throws java.io.IOException {
 		if (args.length != 1) {
 			System.out.println(
-				"Error: Input file must be named on command line." + args.length );
+				"Error: Input file must be named on command line." );
 			System.exit(-1);
 		}
 		java.io.FileInputStream yyin = null;

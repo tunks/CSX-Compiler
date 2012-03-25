@@ -5,6 +5,7 @@ class Types{
  public static final int Error = 3;
  public static final int Unknown = 4;
  public static final int Void = 5;
+ public static final int String = 6;
 
  Types(int i){val = i;}
  Types(){val = Unknown;}
@@ -17,6 +18,7 @@ class Types{
 	  case 3: return "Error";
 	  case 4: return "Unknown";
 	  case 5: return "Void";
+      case 6: return "String";
 	  default: throw new RuntimeException();
 	}
  }

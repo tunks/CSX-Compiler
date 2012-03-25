@@ -116,7 +116,8 @@ class classNode extends ASTNode {
 	} // classNode
 
     void checkTypes() {
-        className.checkTypes();
+        //className.checkTypes(); // class name never conflicts with any other
+                                  // declaration
         members.checkTypes();
     }
 
@@ -261,6 +262,13 @@ class varDeclNode extends declNode {
                 /* can't happen */
             }
             varName.idinfo = id;
+            if (!initValue.isNull()) {
+                initValue.checkTypes();
+                typesMustBeEqual(varName.type.val, initValue.type.val,
+                    error() + "Both the left and right"
+                    + " hand sides of an assignment must"
+                    + " have the same type.");
+            }
         } else {
             System.out.println(error() + id.name() + " is already declared.");
             typeErrors++;
@@ -290,12 +298,32 @@ class constDeclNode extends declNode {
         System.out.println(";");
     }
 
-    void checkType() {
-        /* need to do */
-    }
+    void checkTypes() {
+        constValue.checkType();
+        SymbolInfo id;
+        id = (SymbolInfo) st.localLookup(constName.idname);
+        if (id == null) {
+            id = new SymbolInfo(constName.idname,
+                new Kinds(Kinds.Value), constValue.type);
+            constType.type = constValue.type;
+            try {
+                st.insert(id);
+            } catch (DuplicateException d) {
+                /* can't happen */
+            } catch (EmptySTException e) {
+                /* can't happen */
+            }
+            constName.idinfo = id;
+        } else {
+            System.out.println(error() + id.name() + " is already declared.");
+            typeErrors++;
+            constName.type = new Types(Types.Error);
+        } // id != null
+    } // checkTypes()
 
 	private final identNode constName;
 	private final exprNode constValue;
+    private final typeNode constType;
 } // class constDeclNode
 
 class arrayDeclNode extends declNode {
@@ -317,9 +345,27 @@ class arrayDeclNode extends declNode {
         System.out.println("];");
     }
 
-    void checkType() {
-        /* need to do */
-    }
+    void checkTypes() {
+        SymbolInfo id;
+        id = (SymbolInfo) st.localLookup(varName.idname);
+        if (id == null) {
+            id = new SymbolInfo(arrayName.idname,
+                new Kinds(Kinds.Array), elementType.type);
+            arrayName.type = elementType.type;
+            try {
+                st.insert(id);
+            } catch (DuplicateException d) {
+                /* can't happen */
+            } catch (EmptySTException e) {
+                /* can't happen */
+            }
+            arrayName.idinfo = id;
+        } else {
+            System.out.println(error() + id.name() + " is already declared.");
+            typeErrors++;
+            arrayName.type = new Types(Types.Error);
+        } // id != null
+    } //checkTypes
 
 	private final identNode arrayName;
 	private final typeNode elementType;
@@ -490,6 +536,33 @@ class methodDeclNode extends ASTNode {
         os.Unparse(0);
         System.out.print("\n");
     }
+    
+    void checkTypes() {
+        SymbolInfo id;
+        id = (SymbolInfo) st.localLookup(name.idname);
+        if (id == null) {
+            id = new SymbolInfo(name.idname,
+                new Kinds(Kinds.Method), returnType.type);
+            name.type = returnType.type;
+            try {
+                st.insert(id);
+            } catch (DuplicateException d) {
+                /* can't happen */
+            } catch (EmptySTException e) {
+                /* can't happen */
+            }
+            name.idinfo = id;
+        } else {
+            System.out.println(error() + id.name() + " is already declared.");
+            typeErrors++;
+            name.type = new Types(Types.Error);
+        }
+        st.openScope();
+        args.checkTypes();
+        decls.checkTypes();
+        stmts.checkTypes();
+        st.closeScope();
+    } // checkTypes
 
 	private final identNode name;
 	private final argDeclsNode args;

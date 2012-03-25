@@ -6,7 +6,11 @@
 
 class SymbolInfo extends Symb {
  public Kinds kind; // Should always be Var in CSX-lite
+                    // Should be Var, Value, Array, ScalarParm, ArrayParm,
+                    //           Method and Label in CSX
  public Types type; // Should always be Integer or Boolean in CSX-lite
+                    // Should be Integer, Boolean, Character, String, Void,
+                    //           Error and Unknown in CSX
 
  public SymbolInfo(String id, Kinds k, Types t){
 	super(id);

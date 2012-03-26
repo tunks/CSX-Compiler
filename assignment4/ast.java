@@ -223,6 +223,7 @@ class nullDeclNode extends declNode {
     nullDeclNode() {}
     boolean isNull() {return true;}
     void Unparse(int ident) {}
+    void checkTypes() {}
 }
 
 class varDeclNode extends declNode {
@@ -601,6 +602,11 @@ class argDeclsNode extends ASTNode {
         }
     }
 
+    void checkTypes() {
+        thisDecl.checkTypes();
+        moreDecls.checkTypes();
+    }
+
 	private argDeclNode thisDecl;
 	private argDeclsNode moreDecls;
 } // class argDeclsNode 
@@ -626,6 +632,28 @@ class arrayArgDeclNode extends argDeclNode {
         System.out.print("[ ]");
     }
 
+    void checkTypes() {
+        SymbolInfo id;
+        id = (SymbolInfo) st.localLookup(argname.idname);
+        if (id == null) {
+            id = new SymbolInfo(varName.idname,
+                new Kinds(Kinds.ArrayParm), elementType.type);
+            argName.type = elementType.type;
+            try {
+                st.insert(id);
+            } catch (DuplicateException d) {
+                /* can't happen */
+            } catch (EmptySTException e) {
+                /* can't happen */
+            }
+            argName.idinfo = id;
+        } else {
+            System.out.println(error() + id.name() + " is already declared.");
+            typeErrors++;
+            argName.type = new Types(Types.Error);
+        } // id != null
+    } // checkTypes
+
 	private final identNode argName;
 	private final typeNode elementType;
 } // class arrayArgDeclNode 
@@ -642,6 +670,28 @@ class valArgDeclNode extends argDeclNode {
         System.out.print(" ");
         argName.Unparse(0);
     }
+
+    void checkTypes() {
+        SymbolInfo id;
+        id = (SymbolInfo) st.localLookup(argName.idname);
+        if (id == null) {
+            id = new SymbolInfo(varName.idname,
+                new Kinds(Kinds.ScalarParm), argType.type);
+            argName.type = argType.type;
+            try {
+                st.insert(id);
+            } catch (DuplicateException d) {
+                /* can't happen */
+            } catch (EmptySTException e) {
+                /* can't happen */
+            }
+            argName.idinfo = id;
+        } else {
+            System.out.println(error() + id.name() + " is already declared.");
+            typeErrors++;
+            varName.type = new Types(Typs.Error);
+        } // id != null
+    } //checkTypes
 
 	private final identNode argName;
 	private final typeNode argType;
@@ -729,7 +779,7 @@ class elseNode extends stmtNode {
     elseNode(stmtNode s, int line, int col) {
       super(line,col);
       elsestmt = s;
-    }
+    } // elseNode
     elseNode() {}
 
     void Unparse(int indent) {
@@ -740,7 +790,11 @@ class elseNode extends stmtNode {
         System.out.print(linenum + ":");
         genIndent(indent);
         System.out.println("}");
-    }
+    } // Unparse
+
+    void checkTypes() {
+        elsestmt.checkTypes();
+    } // checkTypes
 
     static nullElseNode NULL = new nullElseNode();
     private stmtNode elsestmt;
@@ -750,6 +804,7 @@ class nullElseNode extends elseNode {
     nullElseNode() {}
     boolean  isNull() {return true;}
     void Unparse(int indent) {}
+    void checkTypes() {}
 } // class nullElseNode
 
 class ifThenNode extends stmtNode {
@@ -758,7 +813,7 @@ class ifThenNode extends stmtNode {
 		condition = e;
 		thenPart = s1;
 		elsePart = el;
-	}
+	} // ifThenNode
 
 	void Unparse(int indent) {
 		System.out.print(linenum + ":");
@@ -771,7 +826,7 @@ class ifThenNode extends stmtNode {
         genIndent(indent);
         System.out.println("}");
         elsePart.Unparse(indent);
-	}
+	} // Unparse
 
     void checkTypes() {
         condition.checkTypes();
@@ -780,7 +835,7 @@ class ifThenNode extends stmtNode {
             " if must be a bool.");
         thenPart.checkTypes();
         elsePart.checkTypes();
-    }
+    } // checkTypes
 
 	private final exprNode condition;
 	private final stmtNode thenPart;
@@ -788,12 +843,12 @@ class ifThenNode extends stmtNode {
 } // class ifThenNode
 
 class whileNode extends stmtNode {
-	whileNode(exprNode i, exprNode e, stmtNode s, int line, int col) {
+	whileNode(identNode i, exprNode e, stmtNode s, int line, int col) {
 		super(line, col);
 	 label = i;
 	 condition = e;
 	 loopBody = s;
-	}
+	} // whileNode
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
@@ -812,9 +867,40 @@ class whileNode extends stmtNode {
         } else {
             loopBody.Unparse(indent);
         }
-    }
+    } // Unparse
 
-	private final exprNode label;
+    void checkTypes() {
+        condition.checkTypes();
+        typeMustBe(condition.type.val, Types.Boolean,
+            error() + "The control expression of an" +
+            " while must be a bool.");
+        loopBody.checkTypes();
+
+        if (!label.isNull()) {
+            SymbolInfo id;
+            id = (SymbolInfo) st.localLookup(label.idname);
+            if (id == null) {
+                id = new SymbolInfo(label.idname,
+                    new Kinds(Kinds.Label), new Types(Types.Void));
+                label.type = new Types(Types.Void);
+                try {
+                    st.insert(id);
+                } catch (DuplicateException d) {
+                    /* can't happen */
+                } catch (EmptySTException e) {
+                    /* can't happen */
+                }
+                label.idinfo = id;
+            } else {
+                System.out.println(error() + id.name() + " is already declared.");
+                typeErrors++;
+                label.type = new Types(Types.Error);
+            }
+            /* need to check if there is break or return statement */
+        }
+    } // checkTypes
+
+	private final identNode label;
 	private final exprNode condition;
 	private final stmtNode loopBody;
 } // class whileNode 
@@ -823,7 +909,7 @@ class readListNode extends stmtNode {
     readListNode(readNode r, int line, int col) {
         super(line, col);
         read = r;
-    }
+    } // readListNode
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
@@ -831,7 +917,11 @@ class readListNode extends stmtNode {
         System.out.print("read" + " (");
         read.Unparse(0);
         System.out.println(" );");
-    }
+    } // Unparse
+
+    void checkTypes() {
+        read.checkTypes();
+    } // checkTypes
 
     private final readNode read;
 } // class readListNode 
@@ -842,7 +932,7 @@ class readNode extends stmtNode {
 		 super(line, col);
 		 targetVar = n;
 		 moreReads = rn;
-	}
+	} //readNode
 
     void Unparse(int indent) {
         targetVar.Unparse(indent);
@@ -851,7 +941,16 @@ class readNode extends stmtNode {
             System.out.print(", ");
             moreReads.Unparse(indent);
         }
-    }
+    } // Unparse
+
+    void checkTypes() {
+        targetVar.checkTypes();
+        if (targetVar.type.val != Type.Integer) {
+            typeMustBe(targetVar.type.val, Types.Character,
+                error() + "Only int and char values may be read.");
+        }
+        moreReads.checkTypes();
+    } // checkTypes
 
 	static nullReadNode NULL = new nullReadNode();
 	private nameNode targetVar;
@@ -869,7 +968,7 @@ class printListNode extends stmtNode {
    printListNode(printNode p, int line, int col) {
         super(line, col);
         print = p;
-   }
+   } //printListNode
 
    void Unparse(int indent) {
         System.out.print(linenum + ":");
@@ -877,7 +976,11 @@ class printListNode extends stmtNode {
         System.out.print("print" + " ( ");
         print.Unparse(0);
         System.out.println(" );");
-   }
+   } // Unparse
+
+   void checkTypes() {
+        print.checkTypes();
+   } //checkTypes
 
    private final printNode print;
 } // class printListNode
@@ -888,7 +991,7 @@ class printNode extends stmtNode {
 		super(line, col);
 		outputValue = val;
 		morePrints = pn;
-	}
+	} // printNode
 
     void Unparse(int indent) {
         genIndent(indent);
@@ -898,12 +1001,14 @@ class printNode extends stmtNode {
             System.out.print(", ");
             morePrints.Unparse(0);
         }
-    }
+    } // Unparse
 
     void checkTypes() {
         outputValue.checkTypes();
+        if (outputValue.type.val != Types.Boolean && outputValue.type.val != 
+            Types.Character && outputValue.type.val != Types.String) {
         typeMustBe(outputValue.type.val, Types.Integer,
-            error() + "Only int values may be printed.");
+            error() + "Only int, char, bool, and string values may be printed.");}
     } // checkTypes
 
 	static nullPrintNode NULL = new nullPrintNode();
@@ -923,7 +1028,7 @@ class callNode extends stmtNode {
 		super(line, col);
 		methodName = id;
 		args = a;
-	}
+	} // callNode
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
@@ -932,7 +1037,14 @@ class callNode extends stmtNode {
         System.out.print("(");
         args.Unparse(0);
         System.out.println(")" + ";");
-    }
+    } // Unparse
+
+    void checkTypes() {
+        methodName.checkTypes();
+        args.checkTypes();
+        typeMustbe(methodName.type.val, Types.Void,
+            error() + "Only procedures may be called in statements.");
+    } // checkTypes
 
 	private final identNode methodName;
 	private final argsNode args;
@@ -942,7 +1054,7 @@ class returnNode extends stmtNode {
 	returnNode(exprNode e, int line, int col) {
 		super(line, col);
 		returnVal = e;
-	}
+	} //returnNode
     
     void Unparse(int indent) {
         System.out.print(linenum + ":");
@@ -950,7 +1062,7 @@ class returnNode extends stmtNode {
         System.out.print("return ");
         returnVal.Unparse(0);
         System.out.println(";");
-    }
+    } // Unparse
 
 	private final exprNode returnVal;
 } // class returnNode 
@@ -961,7 +1073,7 @@ class blockNode extends stmtNode {
 		decls = f;
 		stmts = s;
         os = o;
-	}
+	} // blockNode
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
@@ -974,7 +1086,14 @@ class blockNode extends stmtNode {
         System.out.print("}");
         os.Unparse(0);
         System.out.print("\n");
-    }
+    } // Unparse
+
+    void checkTypes() {
+        st.openScope();
+        decls.checkTypes();
+        stmts.checkTypes();
+        st.closeScope();
+    } // checkTypes
 
 	private final fieldDeclsNode decls;
 	private final stmtsNode stmts;
@@ -985,7 +1104,7 @@ class breakNode extends stmtNode {
 	breakNode(identNode i, int line, int col) {
 		super(line, col);
 		label = i;
-	}
+	} // breakNode
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
@@ -993,7 +1112,13 @@ class breakNode extends stmtNode {
         System.out.print("break ");
         label.Unparse(0);
         System.out.println(";");
-    }
+    } // Unparse
+
+    void checkTypes() {
+        label.checkTypes();
+        mustBe(lable.kind.val == Kinds.Label);
+    } // checkTypes
+
 	private final identNode label;
 } // class breakNode 
 
@@ -1001,7 +1126,7 @@ class continueNode extends stmtNode {
 	continueNode(identNode i, int line, int col) {
 		super(line, col);
 		label = i;
-	}
+	} // continueNode
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
@@ -1009,7 +1134,12 @@ class continueNode extends stmtNode {
         System.out.print("continue ");
         label.Unparse(0);
         System.out.println(";");
-    }
+    } // Unparse
+
+    void checkTypes() {
+        label.checkTypes();
+        mustBe(label.kind.val == Kinds.Label);
+    } // checkTypes
 
 	private final identNode label;
 } // class continueNode 
@@ -1020,7 +1150,7 @@ class argsNode extends ASTNode {
 		super(line, col);
 		argVal = e;
 		moreArgs = a;
-	}
+	} // argsNode
 
     void Unparse(int indent) {
       argVal.Unparse(0);
@@ -1029,7 +1159,12 @@ class argsNode extends ASTNode {
         System.out.print(",");
         moreArgs.Unparse(0);
       }
-    }
+    } // Unparse
+
+    void checkTypes() {
+        argVal.checkTypes();
+        moreArgs.checkTypes();
+    } // checkTypes
 
 	static nullArgsNode NULL = new nullArgsNode();
 	private exprNode argVal;
@@ -1042,6 +1177,7 @@ class nullArgsNode extends argsNode {
 	}
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
+    void checkTypes() {}
 } // class nullArgsNode 
 
 // abstract superclass; only subclasses are actually created
@@ -1077,7 +1213,7 @@ class booleanOpNode extends exprNode {
       expr = e;
       term = r;
       operatorCode = op;
-    }
+    } // booleanOpNode
 
     static void printOp(int op) {
       switch (op) {
@@ -1100,15 +1236,23 @@ class booleanOpNode extends exprNode {
       printOp(operatorCode);
       term.Unparse(0);
       //System.out.print(")");
-    }
+    } // Unparse
 
     void checkTypes() {
-        mustBe(operatorCode == sym.COR
-            ||operatorCode == sym.CAND);
         expr.checkTypes();
         term.checkTypes();
-        /* need to do */
-    }
+        if (term.isNull) {}
+        else {
+            mustBe(operatorCode == sym.COR
+                ||operatorCode == sym.CAND);
+            tyepMustBe(expr.type.val, Types.Boolean,
+                error() + "Only bool values may be applied.");
+            typeMustbe(term.type.val, Types.Boolean,
+                error() + "Only bool values may be applied.");
+        }
+        type = expr.type;
+        //kind = expr.kind;
+     } // checkTypes
 
     private final exprNode expr;
     private final relationOpNode term;
@@ -1122,7 +1266,7 @@ class relationOpNode extends exprNode {
         secondFactor = f2;
         operatorCode = op;
 
-    }
+    } // relationOpNode
 
     static void printOp(int op) {
       switch (op) {
@@ -1149,7 +1293,31 @@ class relationOpNode extends exprNode {
         default:
           throw new Error("printOp: case not found");
       }
-    }
+    } // printOp
+
+    void checkTypes() {
+        firstFactor.checkTypes();
+        secondFactor.checkTypes();
+        if (secondFactor.isNull()) {}
+        else {
+            mustBe(operatorCode == sym.LT || operatorCode == GT
+                || operatorCode == LEQ || operatorCode == GEQ
+                || operatorCode == EQ || operatorCode == NOTEQ);
+            if (firstFactor.type.val != Types.Integer && firstFactor.type.val 
+                    != Types.Character && firstFactor.type.val != Types.Boolean) {
+              typeMustBe(firstFactor.type.val, Types.Integer,
+                  error() + "Only int, char and bool values may be applied in"
+                  + " relational operators.");
+            } else {
+                typesMustBeEqual(firstFactor.type.val, secondFactor.type.val,
+                    error() + "Both the left and right"
+                    + " hand sides of relation operators"
+                    + " must have the same type.");
+            }
+        }
+        type = firstFactor.type;
+        //kind = firstFactor.type;
+    } // checkTypes
 
     void Unparse(int indent) {
         //System.out.print("(");
@@ -1157,7 +1325,7 @@ class relationOpNode extends exprNode {
         printOp(operatorCode);
         secondFactor.Unparse(0);
         //System.out.print(")");
-    }
+    } // Unparse
 
     private final exprNode firstFactor;
     private final exprNode secondFactor;
@@ -1170,7 +1338,7 @@ class factorNode extends exprNode {
 		operatorCode = op;
 		factor = e1;
 		pri = e2;
-	}
+	} // factorNode
     
     static void printOp(int op) {
       switch (op) {
@@ -1202,7 +1370,30 @@ class factorNode extends exprNode {
         pri.Unparse(0);
         System.out.print(")");
       }
-    }
+    } // Unparse
+
+    void checkTypes() {
+        factor.checkTypes();
+        pri.checkTypes();
+        if (pri.isNull()) {}
+        else {
+            mustBe(operatorCode == sym.PLUS
+                || operatorCode == sym.MINUS);
+            if (factor.type.val != Types.Integer && 
+                factor.type.val != Types.Character) {
+                typeMustBe(factor.type.val, Types.Integer,
+                    error() + "Only int and char values may be applied"
+                    + " in arithmetic operators.");
+            }
+            if (pri.type.val != Types.Ingteger &&
+                pri.type.val != Types.Character) {
+                typeMustBe(pri.type.val, Types.Integer,
+                    error() + "Only int and char values may be applied"
+                    + " in arithmetic operators.");
+            }
+        }
+        type = factor.type;
+    } // checkTypes
 
     private final exprNode factor;
     private final exprNode pri;
@@ -1215,7 +1406,7 @@ class binaryOpNode extends exprNode {
 		operatorCode = op;
 		leftOperand = e1;
 		rightOperand = e2;
-	}
+	} // binaryOpNode
 
 	static void printOp(int op) {
 		switch (op) {
@@ -1244,7 +1435,30 @@ class binaryOpNode extends exprNode {
 		rightOperand.Unparse(0);
 		System.out.print(")");
       }
-	}
+	} // Unparse
+
+    void checkTypes() {
+        leftOperand.checkTypes();
+        rightOperand.checkTypes();
+        if (rightOperand.isNull()) {}
+        else {
+            mustBe(operatorCode == sym.SLASH
+                || operatorCode == sym.TIMES);
+            if (leftOperand.type.val != Types.Integer && 
+                leftOperand.type.val != Types.Character) {
+                typeMustBe(leftOperand.type.val, Types.Integer,
+                    error() + "Only int and char values may be applied"
+                    + " in arithmetic operators.");
+            }
+            if (leftOperand.type.val != Types.Ingteger &&
+                leftOperand.type.val != Types.Character) {
+                typeMustBe(leftOperand.type.val, Types.Integer,
+                    error() + "Only int and char values may be applied"
+                    + " in arithmetic operators.");
+            }
+        }
+        type = leftOperand.type;
+    } // checkTypes
 
 	private final exprNode leftOperand;
 	private final exprNode rightOperand;
@@ -1256,7 +1470,7 @@ class unaryOpNode extends exprNode {
 		super(line, col);
 		operand = e;
 		operatorCode = op;
-	}
+	} // unaryOpNode
 
     static void printOp(int op) {
         switch (op) {
@@ -1273,7 +1487,20 @@ class unaryOpNode extends exprNode {
     void Unparse(int indent) {
         printOp(operatorCode);
         operand.Unparse(0);
-    }
+    } // Unparse
+
+    void checkTypes() {
+        operand.checkTypes();
+        type = operand.type;
+        if (op == smy.NOT) {
+            typeMustBe(operand.type.val, Types.Boolean,
+                error() + "Only bool values may be applied"
+                + " in logical operators.");
+            if (operand.type.val != Types.Boolean) {
+                type = new Types(Types.Error);
+            }
+        }
+    } // checkTypes
 
 	private final exprNode operand;
 	private final int operatorCode; // Token code of the operator
@@ -1284,14 +1511,20 @@ class castNode extends exprNode {
 		super(line, col);
 		operand = e;
 		resultType = t;
-	}
+	} // castNode
 
     void Unparse(int indent) {
       System.out.print("(");
       resultType.Unparse(0);
       System.out.print(")");
       operand.Unparse(0);
-    }
+    } // Unparse
+
+    void checkTypes() {
+        resultType.checkTypes();
+        operand.checkTypes();
+        type = resultType.type;
+    } // checkTypes
 
 	private final exprNode operand;
 	private final typeNode resultType;
@@ -1302,7 +1535,7 @@ class fctCallNode extends exprNode {
 		super(line, col);
 		methodName = id;
 		methodArgs = a;
-	}
+	} // fctCallNode
 
     void Unparse(int indent) {
       methodName.Unparse(0);
@@ -1312,7 +1545,19 @@ class fctCallNode extends exprNode {
         methodArgs.Unparse(0);
       }
       System.out.print(" ) ");
-    }
+    } // Unparse
+
+    void checkTypes() {
+      methodName.checkTypes();
+      methodArgs.checkTypes();
+      type = methodName.type;
+      if (methodNode.type.val == Types.Void) {
+        typeMustBe(methodNode.type.val, Types.Integer,
+            error() + "Only non-void result type"
+            + " may be called in expression.");
+        type = new Types(Types.Error);
+      }
+    } // checkTypes
 
 	private final identNode methodName;
 	private final argsNode methodArgs;
@@ -1376,17 +1621,17 @@ class nameNode extends exprNode {
         subscriptVal.Unparse(0);
         System.out.print("]");
 	  }
-    }
+    } // nameNode
 
     void checkTypes() {
         varName.checkTypes();
         substriptVal.checkTypes();
-        type = varName.type; // need to check type
-    }
+        type = varName.type;
+    } // checkTypes
 
     identNode returnVar() {
       return varName;
-    }
+    } // identNode
 
     static nullNameNode NULL = new nullNameNode(); 
 	private identNode varName;
@@ -1401,25 +1646,31 @@ class nullNameNode extends nameNode {
 }
 
 class strLitNode extends exprNode {
-    /*strLitNode(String val, int line, int col) {
-      super(line, col);
+    strLitNode(String val, int line, int col) {
+      super(line, col, new Types(Types.String),
+          new Kinds(Kinds.Value));
       strval = val;
-    }*/
-    strLitNode(String fullstring, string stringval, int line, int col) {
-        // need to complete this constructor
     } // strLitNode
+
+    /*strLitNode(String fullstring, string stringval, int line, int col) {
+        // need to complete this constructor
+    } // strLitNode */
 
     void Unparse(int indent) {
       System.out.print(strval);
     }
 
-    private String fullstr;
+    void checkTypes() {
+        // All strLits are automatically type-correct
+    } // checkTypes
+
+    //private String fullstr;
     private String strval;
 } // class strLitNode
 
 class intLitNode extends exprNode {
 	intLitNode(int val, int line, int col) {
-		super(line, col,new Types(Types.Integer),
+		super(line, col, new Types(Types.Integer),
             new Kinds(Kinds.Value));
 		intval = val;
 	} // intLitNode
@@ -1437,46 +1688,68 @@ class intLitNode extends exprNode {
 
 class charLitNode extends exprNode {
 	charLitNode(String val, int line, int col) {
-		super(line, col);
+		super(line, col, new Types(Types.Character),
+            new Kinds(Kinds.Value));
 		charval = val;
-	}
+	} // charLitNode
 
     void Unparse(int indent) {
       System.out.print(charval);
-    }
+    } // Unparse
+
+    void checkTypes() {
+        // All charLits are automatically type-correct
+    } // checkTypes
 
 	private final String charval;
 } // class charLitNode 
 
 class trueNode extends eprNode {
 	trueNode(int line, int col) {
-		super(line, col);
-	}
+		super(line, col, new Types(Types.Boolean),
+            new Kinds(Kinds.Value));
+	} // trueNode
+
     void Unparse(int indent) {
       System.out.print("true");
-    }
+    } // Unparse
+
+    void checkTypes() {
+        // All trueNodes are automatically type-correct
+    } // checkTypes
 } // class trueNode 
 
 class falseNode extends exprNode {
 	falseNode(int line, int col) {
-		super(line, col);
-	}
+		super(line, col, new Types(Types.Boolean),
+            new Kinds(Kinds.Value));
+	} // falseNode
+
     void Unparse(int indent) {
-      System.out.print("false");
-    }
+        System.out.print("false");
+    } // Unparse
+
+    void checkTypes() {
+        // All falseNodes are automatically type-correct
+    } // checkTypes
 } // class falseNode 
 
 class exprUnitNode extends exprNode {
 	exprUnitNode(exprNode e, int line, int col) {
 		super(line, col);
 		expr = e;
-	}
+	} //exprUnitNode
 
 	void Unparse(int indent) {
 		System.out.print("(");
         expr.Unparse(0);
         System.out.print(")");
-	}
+	} // Unparse
+
+    void checkTypes() {
+        expr.checkTypes();
+        type = expr.type;
+    } // checkTypes
 
 	private final exprNode expr;
 } // class exprUnitNode 

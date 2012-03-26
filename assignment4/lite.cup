@@ -8,6 +8,13 @@
 /* Preliminaries to set up and use the scanner.  */
 
 import java_cup.runtime.*;
+action code {:
+    // only need to create one of these ever
+    static public intTypeNode INTNode = new intTypeNode(0,0);
+    // only need to create one of these ever
+    static public boolTypeNode BOOLNode = new boolTypeNode(0,0);
+:};
+
 parser code {:
  public void syntax_error(Symbol cur_token)
      {
@@ -15,7 +22,16 @@ parser code {:
 			String.valueOf(((CSXToken)cur_token.value).linenum),
 			null);
      }
+     public void report_fatal_error( String message, Object info)
+     throws java.lang.Exception
+     {
+        done_parsing();
+        report_error(message, info);
+        throw new SyntaxErrorException();
+     }
+
 :};
+
 init with {:              :};
 scan with {: return Scanner.next_token(); :};
 
@@ -36,7 +52,7 @@ terminal CSXToken               MULTICOM;
 //terminal CSXStringLitToken    rw_WRITE;
 
 /* Non terminals */
-non terminal csxLiteNode     	prog;
+non terminal classNode      	prog;
 non terminal memberDeclsNode    memberdecls;
 non terminal fieldDeclsNode     fielddecls;
 non terminal methodDeclsNode    methoddecls;
@@ -73,8 +89,7 @@ start with prog;
 
 prog         ::= rw_CLASS:c ident:id LBRACE:l memberdecls:m RBRACE
              {: RESULT= 
-                new csxLiteNode(
-                    new classNode(id.returnVar(), m, c.linenum, c.colnum)); :}
+                    new classNode(id.returnVar(), m, c.linenum, c.colnum); :}
         ;
 
 memberdecls  ::= fielddecl:f memberdecls:m
@@ -178,7 +193,7 @@ stmt         ::= rw_IF:i LPAREN expr:e RPAREN LBRACE stmt:s1 RBRACE elsepart:el
                  new ifThenNode(e, s1, el, i.linenum, i.colnum); :}
         | rw_WHILE:w LPAREN expr:e RPAREN stmt:s
               {: RESULT = 
-                 new whileNode(exprNode.NULL, e, s, w.linenum, w.colnum); :}
+                 new whileNode(identNode.NULL, e, s, w.linenum, w.colnum); :}
         | ident:id COLON rw_WHILE LPAREN expr:e RPAREN stmt:s
               {: RESULT = 
                  new whileNode(id.returnVar(), e, s, id.linenum, id.colnum); :}

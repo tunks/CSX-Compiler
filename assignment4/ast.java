@@ -191,7 +191,7 @@ class fieldDeclsNode extends ASTNode {
 
     void checkTypes() {
         thisField.checkTypes();
-        moreField.checkTypes();
+        moreFields.checkTypes();
     }
 
 	static nullFieldDeclsNode NULL = new nullFieldDeclsNode();
@@ -300,7 +300,7 @@ class constDeclNode extends declNode {
     }
 
     void checkTypes() {
-        constValue.checkType();
+        constValue.checkTypes();
         SymbolInfo id;
         id = (SymbolInfo) st.localLookup(constName.idname);
         if (id == null) {
@@ -324,7 +324,7 @@ class constDeclNode extends declNode {
 
 	private final identNode constName;
 	private final exprNode constValue;
-    private final typeNode constType;
+    private typeNode constType;
 } // class constDeclNode
 
 class arrayDeclNode extends declNode {
@@ -348,7 +348,7 @@ class arrayDeclNode extends declNode {
 
     void checkTypes() {
         SymbolInfo id;
-        id = (SymbolInfo) st.localLookup(varName.idname);
+        id = (SymbolInfo) st.localLookup(arrayName.idname);
         if (id == null) {
             id = new SymbolInfo(arrayName.idname,
                 new Kinds(Kinds.Array), elementType.type);
@@ -562,7 +562,11 @@ class methodDeclNode extends ASTNode {
         args.checkTypes();
         decls.checkTypes();
         stmts.checkTypes();
-        st.closeScope();
+        try {
+            st.closeScope();
+        } catch (EmptySTException e) {
+            /* can't happen */
+        }
     } // checkTypes
 
 	private final identNode name;
@@ -634,9 +638,9 @@ class arrayArgDeclNode extends argDeclNode {
 
     void checkTypes() {
         SymbolInfo id;
-        id = (SymbolInfo) st.localLookup(argname.idname);
+        id = (SymbolInfo) st.localLookup(argName.idname);
         if (id == null) {
-            id = new SymbolInfo(varName.idname,
+            id = new SymbolInfo(argName.idname,
                 new Kinds(Kinds.ArrayParm), elementType.type);
             argName.type = elementType.type;
             try {
@@ -675,7 +679,7 @@ class valArgDeclNode extends argDeclNode {
         SymbolInfo id;
         id = (SymbolInfo) st.localLookup(argName.idname);
         if (id == null) {
-            id = new SymbolInfo(varName.idname,
+            id = new SymbolInfo(argName.idname,
                 new Kinds(Kinds.ScalarParm), argType.type);
             argName.type = argType.type;
             try {
@@ -689,7 +693,7 @@ class valArgDeclNode extends argDeclNode {
         } else {
             System.out.println(error() + id.name() + " is already declared.");
             typeErrors++;
-            varName.type = new Types(Typs.Error);
+            argName.type = new Types(Types.Error);
         } // id != null
     } //checkTypes
 
@@ -945,7 +949,7 @@ class readNode extends stmtNode {
 
     void checkTypes() {
         targetVar.checkTypes();
-        if (targetVar.type.val != Type.Integer) {
+        if (targetVar.type.val != Types.Integer) {
             typeMustBe(targetVar.type.val, Types.Character,
                 error() + "Only int and char values may be read.");
         }
@@ -986,7 +990,7 @@ class printListNode extends stmtNode {
 } // class printListNode
 
 class printNode extends stmtNode {
-	printNode() {}
+	printNode() {super();}
 	printNode(exprNode val, printNode pn, int line, int col) {
 		super(line, col);
 		outputValue = val;
@@ -1005,9 +1009,10 @@ class printNode extends stmtNode {
 
     void checkTypes() {
         outputValue.checkTypes();
+        morePrints.checkTypes();
         if (outputValue.type.val != Types.Boolean && outputValue.type.val != 
             Types.Character && outputValue.type.val != Types.String) {
-        typeMustBe(outputValue.type.val, Types.Integer,
+                typeMustBe(outputValue.type.val, Types.Integer,
             error() + "Only int, char, bool, and string values may be printed.");}
     } // checkTypes
 
@@ -1042,7 +1047,7 @@ class callNode extends stmtNode {
     void checkTypes() {
         methodName.checkTypes();
         args.checkTypes();
-        typeMustbe(methodName.type.val, Types.Void,
+        typeMustBe(methodName.type.val, Types.Void,
             error() + "Only procedures may be called in statements.");
     } // checkTypes
 
@@ -1092,7 +1097,11 @@ class blockNode extends stmtNode {
         st.openScope();
         decls.checkTypes();
         stmts.checkTypes();
-        st.closeScope();
+        try {
+            st.closeScope();
+        } catch (EmptySTException e) {
+            /* can't happen */
+        }
     } // checkTypes
 
 	private final fieldDeclsNode decls;
@@ -1116,7 +1125,7 @@ class breakNode extends stmtNode {
 
     void checkTypes() {
         label.checkTypes();
-        mustBe(lable.kind.val == Kinds.Label);
+        mustBe(label.kind.val == Kinds.Label);
     } // checkTypes
 
 	private final identNode label;
@@ -1241,13 +1250,13 @@ class booleanOpNode extends exprNode {
     void checkTypes() {
         expr.checkTypes();
         term.checkTypes();
-        if (term.isNull) {}
+        if (expr.isNull()) {}
         else {
             mustBe(operatorCode == sym.COR
                 ||operatorCode == sym.CAND);
-            tyepMustBe(expr.type.val, Types.Boolean,
+            typeMustBe(expr.type.val, Types.Boolean,
                 error() + "Only bool values may be applied.");
-            typeMustbe(term.type.val, Types.Boolean,
+            typeMustBe(term.type.val, Types.Boolean,
                 error() + "Only bool values may be applied.");
         }
         type = expr.type;
@@ -1300,9 +1309,9 @@ class relationOpNode extends exprNode {
         secondFactor.checkTypes();
         if (secondFactor.isNull()) {}
         else {
-            mustBe(operatorCode == sym.LT || operatorCode == GT
-                || operatorCode == LEQ || operatorCode == GEQ
-                || operatorCode == EQ || operatorCode == NOTEQ);
+            mustBe(operatorCode == sym.LT || operatorCode == sym.GT
+                || operatorCode == sym.LEQ || operatorCode == sym.GEQ
+                || operatorCode == sym.EQ || operatorCode == sym.NOTEQ);
             if (firstFactor.type.val != Types.Integer && firstFactor.type.val 
                     != Types.Character && firstFactor.type.val != Types.Boolean) {
               typeMustBe(firstFactor.type.val, Types.Integer,
@@ -1385,7 +1394,7 @@ class factorNode extends exprNode {
                     error() + "Only int and char values may be applied"
                     + " in arithmetic operators.");
             }
-            if (pri.type.val != Types.Ingteger &&
+            if (pri.type.val != Types.Integer &&
                 pri.type.val != Types.Character) {
                 typeMustBe(pri.type.val, Types.Integer,
                     error() + "Only int and char values may be applied"
@@ -1450,7 +1459,7 @@ class binaryOpNode extends exprNode {
                     error() + "Only int and char values may be applied"
                     + " in arithmetic operators.");
             }
-            if (leftOperand.type.val != Types.Ingteger &&
+            if (leftOperand.type.val != Types.Integer &&
                 leftOperand.type.val != Types.Character) {
                 typeMustBe(leftOperand.type.val, Types.Integer,
                     error() + "Only int and char values may be applied"
@@ -1492,7 +1501,7 @@ class unaryOpNode extends exprNode {
     void checkTypes() {
         operand.checkTypes();
         type = operand.type;
-        if (op == smy.NOT) {
+        if (operatorCode == sym.NOT) {
             typeMustBe(operand.type.val, Types.Boolean,
                 error() + "Only bool values may be applied"
                 + " in logical operators.");
@@ -1551,8 +1560,8 @@ class fctCallNode extends exprNode {
       methodName.checkTypes();
       methodArgs.checkTypes();
       type = methodName.type;
-      if (methodNode.type.val == Types.Void) {
-        typeMustBe(methodNode.type.val, Types.Integer,
+      if (methodName.type.val == Types.Void) {
+        typeMustBe(methodName.type.val, Types.Integer,
             error() + "Only non-void result type"
             + " may be called in expression.");
         type = new Types(Types.Error);
@@ -1625,7 +1634,7 @@ class nameNode extends exprNode {
 
     void checkTypes() {
         varName.checkTypes();
-        substriptVal.checkTypes();
+        subscriptVal.checkTypes();
         type = varName.type;
     } // checkTypes
 
@@ -1665,7 +1674,7 @@ class strLitNode extends exprNode {
     } // checkTypes
 
     //private String fullstr;
-    private String strval;
+    private final String strval;
 } // class strLitNode
 
 class intLitNode extends exprNode {
@@ -1704,7 +1713,7 @@ class charLitNode extends exprNode {
 	private final String charval;
 } // class charLitNode 
 
-class trueNode extends eprNode {
+class trueNode extends exprNode {
 	trueNode(int line, int col) {
 		super(line, col, new Types(Types.Boolean),
             new Kinds(Kinds.Value));

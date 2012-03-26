@@ -439,7 +439,7 @@ MULTICOMMENT=[#][^#]|[^#]
 }
 
 /* String Literals */
-"\""([^\"\\]|\\t|\\\\|\\\")*"\"" {
+"\""([^\"\\]|\\t|\\n|\\\\|\\\")*"\"" {
   Pos.setpos();
   Pos.col += yytext().length();
   return new Symbol(sym.STRLIT,

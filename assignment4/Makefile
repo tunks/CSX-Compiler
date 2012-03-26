@@ -22,8 +22,8 @@ VPATH = $(DESTPATH)
 JCFLAGS = -Xlint:all -deprecation -classpath $(CLASSPATH) -d $(DESTPATH)
 JFLAGS = -classpath $(CLASSPATH)
 #TESTDIR = $(COURSEDIR)/proj4/tests
-#TESTDIR = ./tests
-TESTDIR = .
+TESTDIR = ./tests
+#TESTDIR = .
 
 %.class: %.java
 	javac $(JCFLAGS) $<
@@ -46,9 +46,9 @@ ASTNode.class: ast.java sym.class SymbolTable.class SymbolInfo.class
 P4.class: Yylex.class Scanner.class parser.class ASTNode.class
 
 test: all
-	java $(JFLAGS) P4 $(TESTDIR)/test1.lite
-	java $(JFLAGS) P4 $(TESTDIR)/test2.lite
-	java $(JFLAGS) P4 $(TESTDIR)/test3.lite
+	java $(JFLAGS) P4 $(TESTDIR)/test-00.csx
+	java $(JFLAGS) P4 $(TESTDIR)/test-01.csx
+	java $(JFLAGS) P4 $(TESTDIR)/test-02.csx
 
 ###
 # style check

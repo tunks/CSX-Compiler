@@ -68,12 +68,12 @@ non terminal typeNode           type;
 non terminal argsNode           args;
 non terminal readNode           read;
 non terminal printNode          write;
-non terminal exprNode           expr;
-non terminal relationOpNode     term;
-non terminal factorNode 		factor;
-non terminal binaryOpNode	    pri;
-non terminal exprNode           unary;
-non terminal exprNode           unit;
+non terminal exprNode           expr,term,factor,pri,unary,unit;
+//non terminal relationOpNode     term;
+//non terminal factorNode 		factor;
+//non terminal binaryOpNode	    pri;
+//non terminal exprNode           unary;
+//non terminal exprNode           unit;
 non terminal nameNode           name;
 non terminal nameNode           ident;
 
@@ -270,7 +270,7 @@ expr         ::= expr:e COR term:t
                  new booleanOpNode(e, sym.CAND, t, e.linenum, e.colnum); :}
         | term:t
               {: RESULT = 
-                 new booleanOpNode(exprNode.NULL, -1, t, t.linenum, t.colnum); :}  // sym = -1
+                 t; :}  // sym = -1
         ;
 
 term         ::= factor:f1 LT factor:f2
@@ -286,7 +286,7 @@ term         ::= factor:f1 LT factor:f2
         | factor:f1 NOTEQ factor:f2
               {: RESULT = new relationOpNode(f1, sym.NOTEQ, f2, f1.linenum, f1.colnum); :}
         | factor:f1
-              {: RESULT = new relationOpNode(f1, -1, exprNode.NULL, f1.linenum, f1.colnum); :} // sym = -1
+              {: RESULT = f1; :} // sym = -1
         ;
 
 factor       ::= factor:f PLUS pri:p
@@ -297,7 +297,7 @@ factor       ::= factor:f PLUS pri:p
                  new factorNode(f, sym.MINUS, p, f.linenum, f.colnum); :}
         | pri:p
               {: RESULT = 
-                 new factorNode(p, -1, exprNode.NULL, p.linenum, p.colnum); :}
+                 p; :}
         ;
 
 pri          ::= pri:p TIMES unary:u
@@ -308,7 +308,7 @@ pri          ::= pri:p TIMES unary:u
                  new binaryOpNode(p, sym.SLASH, u, p.linenum, p.colnum); :}
         | unary:u
               {: RESULT = 
-                 new binaryOpNode(u, -1, exprNode.NULL, u.linenum, u.colnum); :}
+                 u; :}
         ;
 
 unary        ::= NOT:n unary:u
@@ -319,7 +319,7 @@ unary        ::= NOT:n unary:u
                  new castNode(t, u, l.linenum, l.colnum); :}
         | unit: n
               {: RESULT = 
-                 new unaryOpNode(-1, n, n.linenum, n.colnum); :} // sym = -1
+                 n; :} // sym = -1
         ;
 
 unit         ::= ident: id

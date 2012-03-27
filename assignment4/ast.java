@@ -147,19 +147,18 @@ class memberDeclsNode extends ASTNode {
 		fields = f;
 		methods = m;
         moreMembers = mm;
-	}
+	} // memberDeclsNode
 
     void checkTypes() {
         fields.checkTypes();
         methods.checkTypes();
         moreMembers.checkTypes();
-    }
-
+    } // checkTypes
     void Unparse(int indent) {
       fields.Unparse(indent);
       moreMembers.Unparse(indent);
       methods.Unparse(indent);
-    }
+    } // Unparse
 
     static nullMemberDeclsNode NULL = new nullMemberDeclsNode();
 	private declNode fields;
@@ -306,7 +305,7 @@ class constDeclNode extends declNode {
         if (id == null) {
             id = new SymbolInfo(constName.idname,
                 new Kinds(Kinds.Value), constValue.type);
-            constType.type = constValue.type;
+            constName.type = constValue.type;
             try {
                 st.insert(id);
             } catch (DuplicateException d) {
@@ -324,7 +323,6 @@ class constDeclNode extends declNode {
 
 	private final identNode constName;
 	private final exprNode constValue;
-    private typeNode constType;
 } // class constDeclNode
 
 class arrayDeclNode extends declNode {
@@ -731,7 +729,6 @@ class stmtsNode extends ASTNode {
 		thisStmt.Unparse(indent);
 		moreStmts.Unparse(indent);
 	} // Unparse
-
     void checkTypes() {
         thisStmt.checkTypes();
         moreStmts.checkTypes();
@@ -768,6 +765,7 @@ class asgNode extends stmtNode {
     void checkTypes() {
         target.checkTypes();
         source.checkTypes();
+        //System.out.println("target " + target.type.toString() + "  source " + source.type.toString());
         //mustBe(target.kind.var == Kinds.Var); //In CSX-lite all IDs should be vars!
         typesMustBeEqual(source.type.val, target.type.val,
             error() + "Both the left and right"
@@ -990,11 +988,11 @@ class printListNode extends stmtNode {
 } // class printListNode
 
 class printNode extends stmtNode {
-	printNode() {super();}
+	printNode() {}
 	printNode(exprNode val, printNode pn, int line, int col) {
 		super(line, col);
 		outputValue = val;
-		morePrints = pn;
+ 		morePrints = pn;
 	} // printNode
 
     void Unparse(int indent) {
@@ -1010,6 +1008,7 @@ class printNode extends stmtNode {
     void checkTypes() {
         outputValue.checkTypes();
         morePrints.checkTypes();
+        //System.out.println(outputValue.type.toString());
         if (outputValue.type.val != Types.Boolean && outputValue.type.val != 
             Types.Character && outputValue.type.val != Types.String) {
                 typeMustBe(outputValue.type.val, Types.Integer,
@@ -1207,7 +1206,7 @@ abstract class exprNode extends ASTNode {
 	static nullExprNode NULL = new nullExprNode();
     protected Types type; // Used for typechecking: the type of this node
     protected Kinds kind; // Used for typechecking: the kind of this node
-}
+} // abstract class exprNode
 
 class nullExprNode extends exprNode {
 	nullExprNode() {}
@@ -1217,7 +1216,7 @@ class nullExprNode extends exprNode {
 } // class nullExprNode 
 
 class booleanOpNode extends exprNode {
-    booleanOpNode(exprNode e, int op, relationOpNode r, int line, int col) {
+    booleanOpNode(exprNode e, int op, exprNode r, int line, int col) {
       super(line, col);
       expr = e;
       term = r;
@@ -1259,12 +1258,12 @@ class booleanOpNode extends exprNode {
             typeMustBe(term.type.val, Types.Boolean,
                 error() + "Only bool values may be applied.");
         }
-        type = expr.type;
+        type = new Types(Types.Boolean);
         //kind = expr.kind;
      } // checkTypes
 
     private final exprNode expr;
-    private final relationOpNode term;
+    private final exprNode term;
     private final int operatorCode;
 } // booleanOpNode class
 
@@ -1324,7 +1323,7 @@ class relationOpNode extends exprNode {
                     + " must have the same type.");
             }
         }
-        type = firstFactor.type;
+        type = new Types(Types.Boolean);
         //kind = firstFactor.type;
     } // checkTypes
 
@@ -1401,7 +1400,7 @@ class factorNode extends exprNode {
                     + " in arithmetic operators.");
             }
         }
-        type = factor.type;
+        type = new Types(Types.Integer);
     } // checkTypes
 
     private final exprNode factor;
@@ -1466,7 +1465,7 @@ class binaryOpNode extends exprNode {
                     + " in arithmetic operators.");
             }
         }
-        type = leftOperand.type;
+        type = new Types(Types.Integer);
     } // checkTypes
 
 	private final exprNode leftOperand;
@@ -1500,7 +1499,7 @@ class unaryOpNode extends exprNode {
 
     void checkTypes() {
         operand.checkTypes();
-        type = operand.type;
+        type = new Types(Types.Boolean);
         if (operatorCode == sym.NOT) {
             typeMustBe(operand.type.val, Types.Boolean,
                 error() + "Only bool values may be applied"
@@ -1597,6 +1596,9 @@ class identNode extends exprNode {
         SymbolInfo id;
         //mustBe(kind.val == Kinds.Var); // In CSX-lite all IDs should be vars!
         id = (SymbolInfo) st.localLookup(idname);
+        if (id == null) {
+            id = (SymbolInfo) st.globalLookup(idname);
+        }
         if (id == null) {
           System.out.println(error() + idname + " is not declared.");
           typeErrors++;

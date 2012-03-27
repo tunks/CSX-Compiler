@@ -10,8 +10,7 @@
 class p00csx{
 
  void main(){
-  print("Testing Program p00csx\n");
-  print("Test completed\n");
+  print(21);
  }
 
 }

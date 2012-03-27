@@ -78,6 +78,7 @@ non terminal nameNode           name;
 non terminal nameNode           ident;
 
 /* Precedences */
+precedence nonassoc     rw_ELSE;
 precedence left         CAND, COR;
 precedence nonassoc     EQ, NOTEQ, LT, LEQ, GT, GEQ;
 precedence left         PLUS, MINUS;
@@ -181,14 +182,14 @@ stmts		 ::= stmt:s1  stmts:s2
                  new stmtsNode(s1, stmtsNode.NULL, s1.linenum, s1.colnum); :}
         ;
 
-elsepart     ::= rw_ELSE:el LBRACE stmt:s RBRACE
+elsepart     ::= rw_ELSE:el stmt:s 
               {: RESULT = 
                  new elseNode(s, el.linenum, el.colnum); :}
         | 
               {: RESULT = elseNode.NULL; :}
         ;
 
-stmt         ::= rw_IF:i LPAREN expr:e RPAREN LBRACE stmt:s1 RBRACE elsepart:el
+stmt         ::= rw_IF:i LPAREN expr:e RPAREN stmt:s1 elsepart:el
               {: RESULT = 
                  new ifThenNode(e, s1, el, i.linenum, i.colnum); :}
         | rw_WHILE:w LPAREN expr:e RPAREN stmt:s

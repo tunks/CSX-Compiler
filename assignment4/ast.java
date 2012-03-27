@@ -787,11 +787,8 @@ class elseNode extends stmtNode {
     void Unparse(int indent) {
         System.out.print(linenum + ":");
         genIndent(indent);
-        System.out.println("else " + "{");
+        System.out.println("else ");
         elsestmt.Unparse(indent+1);
-        System.out.print(linenum + ":");
-        genIndent(indent);
-        System.out.println("}");
     } // Unparse
 
     void checkTypes() {
@@ -822,11 +819,8 @@ class ifThenNode extends stmtNode {
 		genIndent(indent);
 		System.out.print("if " + "(");
 		condition.Unparse(0);
-		System.out.println(") " + "{");
+		System.out.println(") ");
 		thenPart.Unparse(indent+1);
-        System.out.print(linenum + ":");
-        genIndent(indent);
-        System.out.println("}");
         elsePart.Unparse(indent);
 	} // Unparse
 

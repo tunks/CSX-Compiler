@@ -1,4 +1,4 @@
-##########################################
+#########################################
 ####
 # Makefile for project 4
 # Modified 2/2011 Raphael Finkel
@@ -46,7 +46,7 @@ ASTNode.class: ast.java sym.class SymbolTable.class SymbolInfo.class
 P4.class: Yylex.class Scanner.class parser.class ASTNode.class
 
 test: all
-	java $(JFLAGS) P4 $(TESTDIR)/test-29.csx
+	java $(JFLAGS) P4 $(TESTDIR)/test-39.csx
 	java $(JFLAGS) P4 $(TESTDIR)/test-40.csx
 	java $(JFLAGS) P4 $(TESTDIR)/test-41.csx
 	java $(JFLAGS) P4 $(TESTDIR)/test-42.csx

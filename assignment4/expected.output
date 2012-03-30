@@ -1,49 +1,6 @@
 
 
-Begin CSX compilation of test1.csx.
-
-CSX program parsed correctly.
-Error (line 3): bb is already declared.
-Error (line 4): Right operand of + must be an int.
-Error (line 4): cc is not declared.
-Error (line 4): dd is not declared.
-Error (line 5): Both the left and right hand sides of an assignment must have the same type.
-Error (line 6): Right operand of + must be an int.
-Error (line 6): cc is not declared.
-Error (line 6): dd is not declared.
-Error (line 6): The control expression of an if must be a bool.
-Error (line 7): The control expression of an if must be a bool.
-Error (line 8): ccc is not declared.
-Error (line 8): dd is not declared.
-Error (line 9): Both the left and right hand sides of an assignment must have the same type.
-Error (line 10): Left operand of - must be an int.
-Error (line 11): Only int values may be printed.
-
-CSX compilation halted due to type errors.
-
-
-Begin CSX compilation of test2.csx.
-
-CSX program parsed correctly.
-Error (line 7): dup is already declared.
-Error (line 8): Right operand of + must be an int.
-Error (line 9): Right operand of - must be an int.
-Error (line 10): Left operand of + must be an int.
-Error (line 11): Left operand of - must be an int.
-Error (line 13): Right operand of - must be an int.
-Error (line 15): bb is not declared.
-Error (line 15): bbb is not declared.
-Error (line 16): The control expression of an if must be a bool.
-Error (line 18): ccc is not declared.
-Error (line 18): dd is not declared.
-Error (line 20): Both the left and right hand sides of an assignment must have the same type.
-Error (line 22): aaa is not declared.
-Error (line 23): Only int values may be printed.
-
-CSX compilation halted due to type errors.
-
-
-Begin CSX compilation of test3.csx.
+Begin CSX compilation of ./tests/test-00.csx.
 
 CSX program parsed correctly.
 No CSX type errors detected.

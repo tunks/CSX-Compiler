@@ -4,6 +4,7 @@ abstract class ASTNode {
 
 	int linenum;
 	int colnum;
+    int size;
 
     static int typeErrors = 0; // Total number of type errors found
 
@@ -19,6 +20,13 @@ abstract class ASTNode {
         }
     } // mustBe
 
+    static void kindMustBe(int testType, int testKind, int requiredKind, String errorMsg) {
+        if ((testType != Types.Error) && (testKind != requiredKind)) {
+            System.out.println(errorMsg);
+            typeErrors++;
+        }
+    } // kindMustBe
+
     static void typeMustBe(int testType, int requiredType, String errorMsg) {
         if ((testType != Types.Error) && (testType != requiredType)) {
             System.out.println(errorMsg);
@@ -33,11 +41,26 @@ abstract class ASTNode {
         }
     } // typesMustBeEqual
 
+    @Override public String toString() {
+        return(this.getClass().getName());
+    }
+
+    void findClass(String str) {
+        if (this.toString() == str)
+            findResult = true;
+    } // findClass
+
     String error() {
         return "Error (line " + linenum + "): ";
     } // error
 
     public static SymbolTable st = new SymbolTable();
+
+    protected String parentNode;
+
+    protected String brotherNode;    
+    
+    static boolean findResult;
 
 	ASTNode() {
 		linenum = -1;
@@ -119,6 +142,12 @@ class classNode extends ASTNode {
         //className.checkTypes(); // class name never conflicts with any other
                                   // declaration
         members.checkTypes();
+        SymbolInfo id;
+        id = (SymbolInfo) st.localLookup("main");
+        if (id == null) {
+            System.out.println(error() + "Don't declare main method in the class.");
+            typeErrors++;
+        }
     }
 
     boolean isTypeCorrect() {
@@ -331,6 +360,7 @@ class arrayDeclNode extends declNode {
 		arrayName = id;
 		elementType = t;
 		arraySize = lit;
+        size = arraySize.returnIntVal();
 	}
 
     void Unparse(int indent) {
@@ -351,6 +381,7 @@ class arrayDeclNode extends declNode {
             id = new SymbolInfo(arrayName.idname,
                 new Kinds(Kinds.Array), elementType.type);
             arrayName.type = elementType.type;
+            id.size = size;
             try {
                 st.insert(id);
             } catch (DuplicateException d) {
@@ -359,6 +390,11 @@ class arrayDeclNode extends declNode {
                 /* can't happen */
             }
             arrayName.idinfo = id;
+            if (id.size <= 0) {
+                System.out.println(error() + "The size of " + id.name() + " is not greater than zero.");
+                typeErrors++;
+                arrayName.type = new Types(Types.Error);
+            }
         } else {
             System.out.println(error() + id.name() + " is already declared.");
             typeErrors++;
@@ -538,6 +574,21 @@ class methodDeclNode extends ASTNode {
     
     void checkTypes() {
         SymbolInfo id;
+        if (name.idname.compareTo("main") == 0) {
+            if (returnType.type.val != Types.Void) {
+                System.out.println(error() + "The main method must be void.");
+                typeErrors++;
+            }
+            if (!args.isNull()) {
+                System.out.println(error() + "Main method shouldn't have parameters.");
+                typeErrors++;
+            }
+        }
+        id = (SymbolInfo) st.localLookup("main");
+        if (id != null) {
+            System.out.println(error() + "method " + name.idname + " declared after main method.");
+            typeErrors++;
+        }
         id = (SymbolInfo) st.localLookup(name.idname);
         if (id == null) {
             id = new SymbolInfo(name.idname,
@@ -725,6 +776,11 @@ class stmtsNode extends ASTNode {
 	}
 	stmtsNode() {}
 
+    void findClass(String str) {
+        thisStmt.findClass(str);
+        moreStmts.findClass(str);
+    } // findClass
+
 	void Unparse(int indent) {
 		thisStmt.Unparse(indent);
 		moreStmts.Unparse(indent);
@@ -744,6 +800,7 @@ class nullStmtsNode extends stmtsNode {
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
+    void findClass(String str) {}
 } // class nullStmtsNode 
 
 class asgNode extends stmtNode {
@@ -766,11 +823,22 @@ class asgNode extends stmtNode {
         target.checkTypes();
         source.checkTypes();
         //System.out.println("target " + target.type.toString() + "  source " + source.type.toString());
-        //mustBe(target.kind.var == Kinds.Var); //In CSX-lite all IDs should be vars!
-        typesMustBeEqual(source.type.val, target.type.val,
-            error() + "Both the left and right"
-            + " hand sides of an assignment must"
-            + " have the same type.");
+        if (target.kind.val == Kinds.Value) {
+            System.out.println(error() + "Assignments to constant identifiers is invalid.");
+            typeErrors++;
+            target.type = new Types(Types.Error);
+        } else if (target.type.val == Types.Character && target.kind.val == Kinds.Array && source.type.val == Types.String) {
+            if (target.returnVarName().idinfo.size != source.size) {
+                System.out.println(error() + "The string literal and character array have different size.");
+                typeErrors++;
+                target.type = new Types(Types.Error);
+            }
+        } else {
+            typesMustBeEqual(source.type.val, target.type.val,
+                error() + "Both the left and right"
+                + " hand sides of an assignment must"
+                + " have the same type.");
+        }
     } // checkTypes
 
 	private final nameNode target;
@@ -812,6 +880,8 @@ class ifThenNode extends stmtNode {
 		condition = e;
 		thenPart = s1;
 		elsePart = el;
+        thenPart.brotherNode = "if";
+        elsePart.brotherNode = "else";
 	} // ifThenNode
 
 	void Unparse(int indent) {
@@ -844,6 +914,7 @@ class whileNode extends stmtNode {
 	 label = i;
 	 condition = e;
 	 loopBody = s;
+     loopBody.brotherNode = "while";
 	} // whileNode
 
     void Unparse(int indent) {
@@ -866,13 +937,8 @@ class whileNode extends stmtNode {
     } // Unparse
 
     void checkTypes() {
-        condition.checkTypes();
-        typeMustBe(condition.type.val, Types.Boolean,
-            error() + "The control expression of an" +
-            " while must be a bool.");
-        loopBody.checkTypes();
-
         if (!label.isNull()) {
+          
             SymbolInfo id;
             id = (SymbolInfo) st.localLookup(label.idname);
             if (id == null) {
@@ -892,8 +958,29 @@ class whileNode extends stmtNode {
                 typeErrors++;
                 label.type = new Types(Types.Error);
             }
-            /* need to check if there is break or return statement */
+            if (loopBody.toString() == "blockNode") {
+                findResult = false;
+                loopBody.findClass("breakNode");
+                loopBody.findClass("continueNode");
+                if (findResult == false) {
+                    System.out.println(error() + "The break or continue statement must appear within"
+                        + " the body of the while statement that is selected by the label.");
+                    typeErrors++;
+                }
+                else {
+                    findResult = false;
+                }
+            } else if (loopBody.toString() != "breakNode" && loopBody.toString() != "continueNode") {
+                System.out.println(error() + "The break or continue statement must appear within"
+                    + " the body of the while statement that is selected by the label.");
+                typeErrors++;
+            }
         }
+        condition.checkTypes();
+        typeMustBe(condition.type.val, Types.Boolean,
+            error() + "The control expression of an" +
+            " while must be a bool.");
+        loopBody.checkTypes();
     } // checkTypes
 
 	private final identNode label;
@@ -1002,11 +1089,24 @@ class printNode extends stmtNode {
     void checkTypes() {
         outputValue.checkTypes();
         morePrints.checkTypes();
+
         //System.out.println(outputValue.type.toString());
-        if (outputValue.type.val != Types.Boolean && outputValue.type.val != 
-            Types.Character && outputValue.type.val != Types.String) {
-                typeMustBe(outputValue.type.val, Types.Integer,
-            error() + "Only int, char, bool, and string values may be printed.");}
+        if (outputValue.kind.val == Kinds.Var) {
+            if (outputValue.type.val != Types.Boolean && outputValue.type.val != 
+                Types.Character) {
+                    typeMustBe(outputValue.type.val, Types.Integer,
+                error() + "Only int, char, and bool values may be printed.");
+            }
+        } else if (outputValue.kind.val == Kinds.Array) {
+            typeMustBe(outputValue.type.val, Types.Character,
+                error() + "Only char arrays may be written.");
+        } else {
+            System.out.println(error() + "Only int, bool, char values, char arrays, and string"
+                  + " literals may be written.");
+            typeErrors++;
+            outputValue.type = new Types(Types.Error);
+
+        }
     } // checkTypes
 
 	static nullPrintNode NULL = new nullPrintNode();
@@ -1071,7 +1171,12 @@ class blockNode extends stmtNode {
 		decls = f;
 		stmts = s;
         os = o;
+        stmts.brotherNode = this.brotherNode;
 	} // blockNode
+
+    void findClass(String str) {
+        stmts.findClass(str);
+    } // findClass
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
@@ -1118,7 +1223,10 @@ class breakNode extends stmtNode {
 
     void checkTypes() {
         label.checkTypes();
-        mustBe(label.kind.val == Kinds.Label);
+        if (this.brotherNode == "while") {
+            kindMustBe(label.type.val, label.kind.val, Kinds.Label, error()
+                + "The break label doesn't match while label.");
+        }
     } // checkTypes
 
 	private final identNode label;
@@ -1140,7 +1248,10 @@ class continueNode extends stmtNode {
 
     void checkTypes() {
         label.checkTypes();
-        mustBe(label.kind.val == Kinds.Label);
+        if (this.brotherNode == "while") {
+            kindMustBe(label.type.val, label.kind.val, Kinds.Label, error()
+                + "The break label doesn't match while label.");
+        }
     } // checkTypes
 
 	private final identNode label;
@@ -1197,6 +1308,7 @@ abstract class exprNode extends ASTNode {
         type = t;
         kind = k;
     } // exprNode
+    int size;
 	static nullExprNode NULL = new nullExprNode();
     protected Types type; // Used for typechecking: the type of this node
     protected Kinds kind; // Used for typechecking: the kind of this node
@@ -1599,6 +1711,7 @@ class identNode extends exprNode {
           type = new Types(Types.Error);
         } else {
             type = id.type;
+            kind = id.kind;
             idinfo = id; // Save ptr to correct symbol table entry
         } // id != null
     } // checkTypes
@@ -1632,11 +1745,14 @@ class nameNode extends exprNode {
         varName.checkTypes();
         subscriptVal.checkTypes();
         type = varName.type;
+        kind = varName.kind;
     } // checkTypes
 
-    identNode returnVar() {
+
+    identNode returnVarName() {
       return varName;
-    } // identNode
+    } // returnVarName
+
 
     static nullNameNode NULL = new nullNameNode(); 
 	private identNode varName;
@@ -1651,14 +1767,19 @@ class nullNameNode extends nameNode {
 }
 
 class strLitNode extends exprNode {
-    strLitNode(String val, int line, int col) {
+
+    strLitNode(String fullstring, String stringval, int line, int col) {
+      super(line, col, new Types(Types.String),
+          new Kinds(Kinds.Value));
+      fullstr = fullstring;
+      strval = stringval;
+      size = strval.length();
+    } // strLitNode
+
+    /*strLitNode(String val, int line, int col) {
       super(line, col, new Types(Types.String),
           new Kinds(Kinds.Value));
       strval = val;
-    } // strLitNode
-
-    /*strLitNode(String fullstring, string stringval, int line, int col) {
-        // need to complete this constructor
     } // strLitNode */
 
     void Unparse(int indent) {
@@ -1669,7 +1790,7 @@ class strLitNode extends exprNode {
         // All strLits are automatically type-correct
     } // checkTypes
 
-    //private String fullstr;
+    private final String fullstr;
     private final String strval;
 } // class strLitNode
 
@@ -1679,6 +1800,10 @@ class intLitNode extends exprNode {
             new Kinds(Kinds.Value));
 		intval = val;
 	} // intLitNode
+
+    int returnIntVal() {
+        return intval;
+    }
 
     void Unparse(int indent) {
       System.out.print(intval);

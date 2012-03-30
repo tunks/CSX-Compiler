@@ -11,6 +11,7 @@ class SymbolInfo extends Symb {
  public Types type; // Should always be Integer or Boolean in CSX-lite
                     // Should be Integer, Boolean, Character, String, Void,
                     //           Error and Unknown in CSX
+ public int size;
 
  public SymbolInfo(String id, Kinds k, Types t){
 	super(id);

@@ -38,9 +38,11 @@ class CSXCharLitToken extends CSXToken {
 class CSXStringLitToken extends CSXToken {
 	String stringText; // Full text of string literal,
                           //  including quotes & escapes
+    String withOutQuote; // text of string without quotes
 	CSXStringLitToken(String text,int line,int col) {
 		super(line,col);
 		stringText=text;
+		withOutQuote=text.substring(1,text.length()-1);
 	}
 }
 

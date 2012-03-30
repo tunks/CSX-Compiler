@@ -9,8 +9,21 @@
 
 class p00csx{
 
+
  void main(){
-  print(21);
+	
+    int b;
+    d:while(true)
+        continue d;
+    a:while(true)
+    {
+        {
+            d:while(true)
+                break d;
+            break a;
+        }
+    }
  }
+
 
 }

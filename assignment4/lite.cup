@@ -177,9 +177,9 @@ fielddecl    ::= type:t ident:id SEMI
 stmts		 ::= stmt:s1  stmts:s2
 			  {: RESULT =
 			     new stmtsNode(s1, s2, s1.linenum, s1.colnum); :}	
-		| stmt:s1
+		| 
 			  {: RESULT = 
-                 new stmtsNode(s1, stmtsNode.NULL, s1.linenum, s1.colnum); :}
+                 stmtsNode.NULL; :}
         ;
 
 elsepart     ::= rw_ELSE:el stmt:s 

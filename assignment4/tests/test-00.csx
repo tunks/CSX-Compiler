@@ -8,21 +8,19 @@
 ##
 
 class p00csx{
-
+  const ab = 3;
 
  void main(){
-	
-    int b;
-    d:while(true)
-        continue d;
-    a:while(true)
-    {
-        {
-            d:while(true)
-                break d;
-            break a;
-        }
-    }
+	char c;
+	int ab;	
+	ab = 43;
+	ab = (true + 3) + 4;	
+	print("1");
+ }
+
+ int abc(int a) {
+	char c;
+    return a;	
  }
 
 

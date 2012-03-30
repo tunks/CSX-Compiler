@@ -43,7 +43,7 @@ abstract class ASTNode {
 
     @Override public String toString() {
         return(this.getClass().getName());
-    }
+    } // toString
 
     void findClass(String str) {
         if (this.toString() == str)
@@ -58,8 +58,8 @@ abstract class ASTNode {
 
     protected String parentNode;
 
-    protected String brotherNode;    
-    
+    protected String brotherNode;
+
     static boolean findResult;
 
 	ASTNode() {
@@ -294,9 +294,8 @@ class varDeclNode extends declNode {
             if (!initValue.isNull()) {
                 initValue.checkTypes();
                 typesMustBeEqual(varName.type.val, initValue.type.val,
-                    error() + "Both the left and right"
-                    + " hand sides of an assignment must"
-                    + " have the same type.");
+                    error() + "The two hand sides of assignment"
+                    + " don't have same type.");
             }
         } else {
             System.out.println(error() + id.name() + " is already declared.");
@@ -552,6 +551,7 @@ class methodDeclNode extends ASTNode {
 		decls = f;
 		stmts = s;
         os = o;
+        stmts.parentNode = id.idname;
 	}
 
     void Unparse(int indent) {
@@ -786,6 +786,7 @@ class stmtsNode extends ASTNode {
 		moreStmts.Unparse(indent);
 	} // Unparse
     void checkTypes() {
+        thisStmt.parentNode = moreStmts.parentNode = this.parentNode;
         thisStmt.checkTypes();
         moreStmts.checkTypes();
     } // checkTypes
@@ -835,9 +836,8 @@ class asgNode extends stmtNode {
             }
         } else {
             typesMustBeEqual(source.type.val, target.type.val,
-                error() + "Both the left and right"
-                + " hand sides of an assignment must"
-                + " have the same type.");
+                error() + "The two hand sides of assignment"
+                + " don't have same type.");
         }
     } // checkTypes
 
@@ -860,6 +860,7 @@ class elseNode extends stmtNode {
     } // Unparse
 
     void checkTypes() {
+        elsestmt.parentNode = this.parentNode;
         elsestmt.checkTypes();
     } // checkTypes
 
@@ -895,6 +896,7 @@ class ifThenNode extends stmtNode {
 	} // Unparse
 
     void checkTypes() {
+        thenPart.parentNode = this.parentNode;
         condition.checkTypes();
         typeMustBe(condition.type.val, Types.Boolean,
             error() + "The control expression of an" +
@@ -937,6 +939,7 @@ class whileNode extends stmtNode {
     } // Unparse
 
     void checkTypes() {
+        loopBody.parentNode = this.parentNode;
         if (!label.isNull()) {
           
             SymbolInfo id;
@@ -1095,11 +1098,14 @@ class printNode extends stmtNode {
             if (outputValue.type.val != Types.Boolean && outputValue.type.val != 
                 Types.Character) {
                     typeMustBe(outputValue.type.val, Types.Integer,
-                error() + "Only int, char, and bool values may be printed.");
+                error() + "For values, only int, char, and bool values may be printed.");
             }
         } else if (outputValue.kind.val == Kinds.Array) {
             typeMustBe(outputValue.type.val, Types.Character,
-                error() + "Only char arrays may be written.");
+                error() + "For arrays, only char arrays may be written.");
+        } else if (outputValue.kind.val == Kinds.Value) {
+            typeMustBe(outputValue.type.val, Types.String,
+                error() + "For literals, only string literals may be written.");
         } else {
             System.out.println(error() + "Only int, bool, char values, char arrays, and string"
                   + " literals may be written.");
@@ -1161,6 +1167,28 @@ class returnNode extends stmtNode {
         returnVal.Unparse(0);
         System.out.println(";");
     } // Unparse
+
+    void checkTypes() {
+        returnVal.checkTypes();
+        SymbolInfo id;
+        id = (SymbolInfo) st.globalLookup(this.parentNode);
+        if (returnVal.isNull()) {
+            typeMustBe(id.type.val, Types.Void,
+                error() + "Return statements without an expression may"
+                + " only appear in procedures(with a void result type).");
+        } else {
+            if (id.type.val == Types.Void) {
+                System.out.println(error() + "Return statements with an"
+                    + " expression may only appear in functions(with a "
+                    + "non-void result type).");
+                typeErrors++;
+            } else {
+                typesMustBeEqual(returnVal.type.val, id.type.val,
+                    error() + "The return expression don't have the same type with"
+                    + " the function.");
+            }
+        }
+    }
 
 	private final exprNode returnVal;
 } // class returnNode 
@@ -1424,9 +1452,8 @@ class relationOpNode extends exprNode {
                   + " relational operators.");
             } else {
                 typesMustBeEqual(firstFactor.type.val, secondFactor.type.val,
-                    error() + "Both the left and right"
-                    + " hand sides of relation operators"
-                    + " must have the same type.");
+                    error() + "The two hand sides of relation"
+                    + " operators don't have same type.");
             }
         }
         type = new Types(Types.Boolean);
@@ -1662,15 +1689,16 @@ class fctCallNode extends exprNode {
     } // Unparse
 
     void checkTypes() {
+      methodName.parentNode = "fctCallNode";
       methodName.checkTypes();
       methodArgs.checkTypes();
       type = methodName.type;
       if (methodName.type.val == Types.Void) {
-        typeMustBe(methodName.type.val, Types.Integer,
-            error() + "Only non-void result type"
-            + " may be called in expression.");
-        type = new Types(Types.Error);
-      }
+            typeMustBe(methodName.type.val, Types.Integer,
+                error() + "Only non-void result type"
+                + " may be called in expression.");
+            type = new Types(Types.Error);
+        }
     } // checkTypes
 
 	private final identNode methodName;
@@ -1699,6 +1727,7 @@ class identNode extends exprNode {
 	} // Unparse
 
     void checkTypes() {
+        boolean isChangeTop = false;
         SymbolInfo id;
         //mustBe(kind.val == Kinds.Var); // In CSX-lite all IDs should be vars!
         id = (SymbolInfo) st.localLookup(idname);
@@ -1710,9 +1739,23 @@ class identNode extends exprNode {
           typeErrors++;
           type = new Types(Types.Error);
         } else {
-            type = id.type;
-            kind = id.kind;
-            idinfo = id; // Save ptr to correct symbol table entry
+            while (id != null && this.parentNode == "fctCallNode" && id.kind.val != Kinds.Method) {
+                st.changeTop();
+                id = (SymbolInfo) st.globalLookup(idname);
+                isChangeTop = true;
+            }
+            if (isChangeTop) {
+                st.restoreTop();
+            }
+            if (id != null) {
+                type = id.type;
+                kind = id.kind;
+                idinfo = id; // Save ptr to correct symbol table entry
+            } else {
+                System.out.println(error() + idname + " is not declared.");
+                typeErrors++;
+                type = new Types(Types.Error);
+            }
         } // id != null
     } // checkTypes
 
@@ -1744,8 +1787,19 @@ class nameNode extends exprNode {
     void checkTypes() {
         varName.checkTypes();
         subscriptVal.checkTypes();
-        type = varName.type;
-        kind = varName.kind;
+        if (subscriptVal.isNull() != true) {
+            if (subscriptVal.type.val != Types.Integer 
+                && subscriptVal.type.val != Types.Character) {
+                    System.out.println(error() + "Only int or char type"
+                        + " may be used to index arrays.");
+                    typeErrors++;
+                    type = new Types(Types.Error);
+             }
+        }
+        if (type.val != Types.Error) {
+            type = varName.type;
+            kind = varName.kind;
+        }
     } // checkTypes
 
 

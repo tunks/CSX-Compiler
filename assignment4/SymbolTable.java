@@ -16,14 +16,24 @@ class SymbolTable {
 	} // class Scope
 
 	private Scope top;
+	private Scope currentTop;
 
 	SymbolTable() {
 		top = new Scope();
 	}
 
+	public void changeTop() {
+		currentTop = top;
+		top = top.next;
+	}
+
+	public void restoreTop() {
+		top = currentTop;
+	}
+
 	public void openScope() {
 		top = new Scope(top);
-	}
+	} // openScope
 
 	public void closeScope() throws EmptySTException {
 		if (top == null) {
@@ -31,7 +41,7 @@ class SymbolTable {
 		} else {
 			top = top.next;
 		}
-	} // closeScope()
+	} // closeScope
 
 	public void insert(Symb s)
 			throws DuplicateException, EmptySTException {

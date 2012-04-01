@@ -1,3 +1,4 @@
+import java.util.*;
 
 abstract class ASTNode {
 // abstract superclass; only subclasses are actually created
@@ -608,6 +609,7 @@ class methodDeclNode extends ASTNode {
             name.type = new Types(Types.Error);
         }
         st.openScope();
+        args.parentNode = name.idname;
         args.checkTypes();
         decls.checkTypes();
         stmts.checkTypes();
@@ -656,6 +658,8 @@ class argDeclsNode extends ASTNode {
     }
 
     void checkTypes() {
+        thisDecl.parentNode = this.parentNode;
+        moreDecls.parentNode = this.parentNode;
         thisDecl.checkTypes();
         moreDecls.checkTypes();
     }
@@ -687,6 +691,13 @@ class arrayArgDeclNode extends argDeclNode {
 
     void checkTypes() {
         SymbolInfo id;
+        id = (SymbolInfo) st.globalLookup(this.parentNode);
+        if (id != null) {
+            id.listKind.add(new Kinds(Kinds.ArrayParm));
+            id.listType.add(new Types(elementType.type.val));
+        } else {
+            System.out.println(error() + "Can't find the method symbol.");
+        }
         id = (SymbolInfo) st.localLookup(argName.idname);
         if (id == null) {
             id = new SymbolInfo(argName.idname,
@@ -726,6 +737,13 @@ class valArgDeclNode extends argDeclNode {
 
     void checkTypes() {
         SymbolInfo id;
+        id = (SymbolInfo) st.globalLookup(this.parentNode);
+        if (id != null) {
+            id.listKind.add(new Kinds(Kinds.ScalarParm));
+            id.listType.add(new Types(argType.type.val));
+        } else {
+            System.out.println(error() + "Can't find the method symbol.");
+        }
         id = (SymbolInfo) st.localLookup(argName.idname);
         if (id == null) {
             id = new SymbolInfo(argName.idname,
@@ -1144,10 +1162,63 @@ class callNode extends stmtNode {
     } // Unparse
 
     void checkTypes() {
+        boolean isChangeTop = false;
+        methodName.parentNode = "callNode";
         methodName.checkTypes();
-        args.checkTypes();
-        typeMustBe(methodName.type.val, Types.Void,
-            error() + "Only procedures may be called in statements.");
+        if (methodName.type.val != Types.Error) {
+            args.parentNode = methodName.idname;
+            args.checkTypes();
+            typeMustBe(methodName.type.val, Types.Void,
+                error() + "Only procedures may be called in statements.");
+            SymbolInfo id;
+            id = (SymbolInfo) st.globalLookup(methodName.idname);
+            while (id != null && id.kind.val != Kinds.Method) {
+                st.changeTop();
+                id = (SymbolInfo) st.globalLookup(methodName.idname);
+                isChangeTop = true;
+            }
+            if (isChangeTop) {
+                st.restoreTop();
+            }
+            if (id.listType.size() == id.parmListType.size()) {
+                Iterator iListType = id.listType.iterator();
+                Iterator iListKind = id.listKind.iterator();
+                Iterator iParmListType = id.parmListType.iterator();
+                Iterator iParmListKind = id.parmListKind.iterator();
+                while (iListType.hasNext()) {
+                    String listType = iListType.next().toString();
+                    String parmListType = iParmListType.next().toString();
+                    if (listType != parmListType) {
+                        System.out.println(error() +"The type of parameters doesn't match.");
+                        System.out.println("\t\t " + "required: " + listType);
+                        System.out.println("\t\t " + "found   : " + parmListType);
+                        typeErrors++;
+                        break;
+                    }
+                }
+                while (iListKind.hasNext()) {
+                    String listKind = iListKind.next().toString();
+                    String parmListKind = iParmListKind.next().toString();
+                    if (listKind == "ScalarParm" && parmListKind == "Array") {
+                        System.out.println(error() +"The kind of parameters doesn't match.");
+                        System.out.println("\t\t " + "required: " + listKind);
+                        System.out.println("\t\t " + "found   : " + parmListKind);
+                        typeErrors++;
+                        break;
+                    } else if (listKind == "ArrayParm" && parmListKind != "Array") {
+                        System.out.println(error() +"The kind of parameters doesn't match.");
+                        System.out.println("\t\t " + "required: " + listKind);
+                        System.out.println("\t\t " + "found   : " + parmListKind);
+                        typeErrors++;
+                        break;
+                    }
+                }
+
+            } else {
+                System.out.println(error() + "The number of parameters doesn't match.");
+                typeErrors++;
+            }
+        }
     } // checkTypes
 
 	private final identNode methodName;
@@ -1303,7 +1374,26 @@ class argsNode extends ASTNode {
     } // Unparse
 
     void checkTypes() {
+        boolean isChangeTop = false;
+        argVal.parentNode = this.parentNode;
+        moreArgs.parentNode = this.parentNode;
         argVal.checkTypes();
+        SymbolInfo id;
+        id = (SymbolInfo) st.globalLookup(argVal.parentNode);
+        while (id != null && id.kind.val != Kinds.Method) {
+            st.changeTop();
+            id = (SymbolInfo) st.globalLookup(argVal.parentNode);
+            isChangeTop = true;
+        }
+        if (isChangeTop) {
+            st.restoreTop();
+        }
+        if (id != null) {
+            id.parmListType.add(argVal.type);
+            id.parmListKind.add(argVal.kind);
+        } else {
+            /* It can't happen */
+        }
         moreArgs.checkTypes();
     } // checkTypes
 
@@ -1689,8 +1779,10 @@ class fctCallNode extends exprNode {
     } // Unparse
 
     void checkTypes() {
-      methodName.parentNode = "fctCallNode";
+      boolean isChangeTop = false;
+      methodName.parentNode = "callNode";
       methodName.checkTypes();
+      methodArgs.parentNode = methodName.idname;
       methodArgs.checkTypes();
       type = methodName.type;
       if (methodName.type.val == Types.Void) {
@@ -1698,6 +1790,53 @@ class fctCallNode extends exprNode {
                 error() + "Only non-void result type"
                 + " may be called in expression.");
             type = new Types(Types.Error);
+       }
+       SymbolInfo id;
+       id = (SymbolInfo) st.globalLookup(methodName.idname);
+       while (id != null && id.kind.val != Kinds.Method) {
+            st.changeTop();
+            id = (SymbolInfo) st.globalLookup(methodName.idname);
+            isChangeTop = true;
+       }
+       if (isChangeTop) {
+             st.restoreTop();
+       }
+       if (id.listType.size() == id.parmListType.size()) {
+            Iterator iListType = id.listType.iterator();
+            Iterator iListKind = id.listKind.iterator();
+            Iterator iParmListType = id.parmListType.iterator();
+            Iterator iParmListKind = id.parmListKind.iterator();
+            while (iListType.hasNext()) {
+                String listType = iListType.next().toString();
+                String parmListType = iParmListType.next().toString();
+                if (listType != parmListType) {
+                    System.out.println(error() +"The type of parameters doesn't match.");
+                    System.out.println("\t\t " + "required: " + listType);
+                    System.out.println("\t\t " + "found   : " + parmListType);
+                    typeErrors++;
+                    break;
+                }
+            }
+            while (iListKind.hasNext()) {
+                String listKind = iListKind.next().toString();
+                String parmListKind = iParmListKind.next().toString();
+                if (listKind == "ScalarParm" && parmListKind == "Array") {
+                    System.out.println(error() +"The kind of parameters doesn't match.");
+                    System.out.println("\t\t " + "required: " + listKind);
+                    System.out.println("\t\t " + "found   : " + parmListKind);
+                    typeErrors++;
+                    break;
+                } else if (listKind == "ArrayParm" && parmListKind != "Array") {
+                    System.out.println(error() +"The kind of parameters doesn't match.");
+                    System.out.println("\t\t " + "required: " + listKind);
+                    System.out.println("\t\t " + "found   : " + parmListKind);
+                    typeErrors++;
+                    break;
+                }
+            }
+        } else {
+            System.out.println(error() + "The number of parameters doesn't match.");
+            typeErrors++;
         }
     } // checkTypes
 
@@ -1735,11 +1874,12 @@ class identNode extends exprNode {
             id = (SymbolInfo) st.globalLookup(idname);
         }
         if (id == null) {
-          System.out.println(error() + idname + " is not declared.");
+          System.out.println(error() + "test" + " is not declared.");
           typeErrors++;
           type = new Types(Types.Error);
         } else {
-            while (id != null && this.parentNode == "fctCallNode" && id.kind.val != Kinds.Method) {
+            while (id != null && this.parentNode == "callNode" && id.kind.val != Kinds.Method) {
+            //while (id != null && id.kind.val != Kinds.Method) {
                 st.changeTop();
                 id = (SymbolInfo) st.globalLookup(idname);
                 isChangeTop = true;

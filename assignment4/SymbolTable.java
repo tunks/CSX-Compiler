@@ -13,6 +13,7 @@ class SymbolTable {
 			currentScope = new HashMap<String, Symb>();
 			next = scopes;
 		}
+        boolean hasChanged = false;
 	} // class Scope
 
 	private Scope top;
@@ -20,15 +21,20 @@ class SymbolTable {
 
 	SymbolTable() {
 		top = new Scope();
+        currentTop = new Scope();
 	}
 
 	public void changeTop() {
-		currentTop = top;
+        if (currentTop.hasChanged == false) {
+		    currentTop = top;
+            currentTop.hasChanged = true;
+        }
 		top = top.next;
 	}
 
 	public void restoreTop() {
 		top = currentTop;
+        currentTop.hasChanged = false;
 	}
 
 	public void openScope() {

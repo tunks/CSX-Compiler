@@ -4,6 +4,8 @@
 *
 ****************************************************/
 
+import java.util.*;
+
 class SymbolInfo extends Symb {
  public Kinds kind; // Should always be Var in CSX-lite
                     // Should be Var, Value, Array, ScalarParm, ArrayParm,
@@ -12,6 +14,14 @@ class SymbolInfo extends Symb {
                     // Should be Integer, Boolean, Character, String, Void,
                     //           Error and Unknown in CSX
  public int size;
+
+ public LinkedList <Types>listType = new LinkedList<Types>();
+
+ public LinkedList <Kinds>listKind = new LinkedList<Kinds>();
+
+ public LinkedList <Types>parmListType = new LinkedList<Types>();
+
+ public LinkedList <Kinds>parmListKind = new LinkedList<Kinds>();
 
  public SymbolInfo(String id, Kinds k, Types t){
 	super(id);

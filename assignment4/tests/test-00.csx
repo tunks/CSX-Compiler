@@ -8,20 +8,24 @@
 ##
 
 class p00csx{
-  const ab = 3;
+
+ int abc(int a, int b) {
+    return a+b;
+ }
+
+ void d(bool c) {
+    bool a;
+    a = c;
+ }
 
  void main(){
-	char c;
-	int ab;	
-	ab = 43;
-	ab = (true + 3) + 4;	
-	print("1");
+    int c;
+    c = abc(3, 4);
+    d(c);
+	print("");
  }
 
- int abc(int a) {
-	char c;
-    return a;	
- }
+
 
 
 }

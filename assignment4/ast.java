@@ -804,6 +804,7 @@ class stmtsNode extends ASTNode {
 		moreStmts.Unparse(indent);
 	} // Unparse
     void checkTypes() {
+        thisStmt.brotherNode = moreStmts.brotherNode = this.brotherNode;
         thisStmt.parentNode = moreStmts.parentNode = this.parentNode;
         thisStmt.checkTypes();
         moreStmts.checkTypes();
@@ -880,6 +881,10 @@ class elseNode extends stmtNode {
       elsestmt = s;
     } // elseNode
     elseNode() {}
+        
+    void findClass(String str) {
+        elsestmt.findClass(str);
+    } // findClass
 
     void Unparse(int indent) {
         System.out.print(linenum + ":");
@@ -900,6 +905,7 @@ class elseNode extends stmtNode {
 class nullElseNode extends elseNode {
     nullElseNode() {}
     boolean  isNull() {return true;}
+    void findClass(String str) {}
     void Unparse(int indent) {}
     void checkTypes() {}
 } // class nullElseNode
@@ -910,9 +916,12 @@ class ifThenNode extends stmtNode {
 		condition = e;
 		thenPart = s1;
 		elsePart = el;
-        thenPart.brotherNode = "if";
-        elsePart.brotherNode = "else";
 	} // ifThenNode
+        
+    void findClass(String str) {
+        thenPart.findClass(str);
+        elsePart.findClass(str);
+    } // findClass
 
 	void Unparse(int indent) {
 		System.out.print(linenum + ":");
@@ -925,6 +934,10 @@ class ifThenNode extends stmtNode {
 	} // Unparse
 
     void checkTypes() {
+        if (this.brotherNode == "while") {
+            thenPart.brotherNode = "while";
+            elsePart.parentNode = "while";
+        }
         thenPart.parentNode = this.parentNode;
         elsePart.parentNode = this.parentNode;
         condition.checkTypes();
@@ -946,7 +959,6 @@ class whileNode extends stmtNode {
 	 label = i;
 	 condition = e;
 	 loopBody = s;
-     loopBody.brotherNode = "while";
 	} // whileNode
 
     void Unparse(int indent) {
@@ -969,6 +981,7 @@ class whileNode extends stmtNode {
     } // Unparse
 
     void checkTypes() {
+        loopBody.brotherNode = "while";
         loopBody.parentNode = this.parentNode;
         if (!label.isNull()) {
           
@@ -1294,6 +1307,7 @@ class blockNode extends stmtNode {
     } // Unparse
 
     void checkTypes() {
+        stmts.brotherNode = this.brotherNode;
         st.openScope();
         decls.checkTypes();
         stmts.checkTypes();
@@ -1352,7 +1366,7 @@ class continueNode extends stmtNode {
         label.checkTypes();
         if (this.brotherNode == "while") {
             kindMustBe(label.type.val, label.kind.val, Kinds.Label, error()
-                + "The break label doesn't match while label.");
+                + "The continue label doesn't match while label.");
         }
     } // checkTypes
 
@@ -1791,12 +1805,13 @@ class fctCallNode extends exprNode {
     } // Unparse
 
     void checkTypes() {
+      int numberOfBackUp= 0;
+      int numberOfPrevBackUp = 0;
       boolean isChangeTop = false;
       methodName.parentNode = "callNode";
       methodName.checkTypes();
-      methodArgs.parentNode = methodName.idname;
-      methodArgs.checkTypes();
       type = methodName.type;
+      kind = methodName.kind;
       if (methodName.type.val == Types.Void) {
             typeMustBe(methodName.type.val, Types.Integer,
                 error() + "Only non-void result type"
@@ -1813,6 +1828,20 @@ class fctCallNode extends exprNode {
        if (isChangeTop) {
              st.restoreTop();
        }
+       if (id != null && id.parmListType.size() != 0) { // back up previous parmlist
+            Iterator iParmListType = id.parmListType.iterator();
+            Iterator iParmListKind = id.parmListKind.iterator();
+            numberOfPrevBackUp = id.backupParmListType.size();
+            while(iParmListType.hasNext()) {
+                id.backupParmListType.add((Types)iParmListType.next());
+                id.backupParmListKind.add((Kinds)iParmListKind.next());
+            }
+            numberOfBackUp = id.parmListType.size();
+            id.parmListType.clear();
+            id.parmListKind.clear();
+       }
+       methodArgs.parentNode = methodName.idname;
+       methodArgs.checkTypes();
        if (id.listType.size() == id.parmListType.size()) {
             Iterator iListType = id.listType.iterator();
             Iterator iListKind = id.listKind.iterator();
@@ -1846,12 +1875,23 @@ class fctCallNode extends exprNode {
                     break;
                 }
             }
-            id.parmListType.clear();
-            id.parmListKind.clear();
+
         } else {
             System.out.println(id.parmListType.size());
             System.out.println(error() + "The number of parameters doesn't match.");
             typeErrors++;
+        }
+        id.parmListType.clear();
+        id.parmListKind.clear();
+        if (numberOfBackUp != 0) { // restore the backup parmlist
+            for (int i = 0; i < numberOfBackUp; i++) {
+                id.parmListType.add(id.backupParmListType.get(numberOfPrevBackUp + i));
+                id.parmListKind.add(id.backupParmListKind.get(numberOfPrevBackUp + i));
+            }
+            for (int i = 0; i < numberOfBackUp; i++) {
+                id.backupParmListType.remove(numberOfPrevBackUp);
+                id.backupParmListKind.remove(numberOfPrevBackUp);
+            }
         }
     } // checkTypes
 
@@ -1889,7 +1929,7 @@ class identNode extends exprNode {
             id = (SymbolInfo) st.globalLookup(idname);
         }
         if (id == null) {
-          System.out.println(error() + "test" + " is not declared.");
+          System.out.println(error() + " is not declared.");
           typeErrors++;
           type = new Types(Types.Error);
         } else {
@@ -1905,6 +1945,7 @@ class identNode extends exprNode {
             if (id != null) {
                 type = id.type;
                 kind = id.kind;
+                size = id.size;
                 idinfo = id; // Save ptr to correct symbol table entry
             } else {
                 System.out.println(error() + idname + " is not declared.");
@@ -1912,7 +1953,7 @@ class identNode extends exprNode {
                 type = new Types(Types.Error);
             }
         } // id != null
-        size = id.size;
+        //size = id.size;
     } // checkTypes
 
 	public String idname;

@@ -23,6 +23,10 @@ class SymbolInfo extends Symb {
 
  public LinkedList <Kinds>parmListKind = new LinkedList<Kinds>();
 
+ public LinkedList <Types>backupParmListType = new LinkedList<Types>();
+
+ public LinkedList <Kinds>backupParmListKind = new LinkedList<Kinds>();
+
  public SymbolInfo(String id, Kinds k, Types t){
 	super(id);
 	kind = k; type = t;};

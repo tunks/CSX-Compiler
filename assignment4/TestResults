@@ -1,5 +1,24 @@
 
 
+Begin CSX compilation of ./tests/myTest.csx.
+
+CSX program parsed correctly.
+Error (line 9): The two hand sides of assignment don't have same type.
+Error (line 10): The string literal and character array have different size.
+Error (line 33): The continue label doesn't match while label.
+Error (line 38): Only same size and component type may be assignmented.
+Error (line 42): The type of parameters doesn't match.
+		 required: Integer
+		 found   : Character
+Error (line 43): Only non-void result type may be called in expression.
+Error (line 44): For arrays, only char arrays may be written.
+Error (line 49): method lastOne declared after main method.
+Error (line 50): The break or continue statement must appear within the body of the while statement that is selected by the label.
+Error (line 53): Return statements without an expression may only appear in procedures(with a void result type).
+
+CSX compilation halted due to type errors.
+
+
 Begin CSX compilation of ./tests/test-00.csx.
 
 CSX program parsed correctly.
@@ -207,16 +226,7 @@ No CSX type errors detected.
 Begin CSX compilation of ./tests/test-37.csx.
 
 CSX program parsed correctly.
-9
-Error (line 21): The number of parameters doesn't match.
-10
-Error (line 21): The number of parameters doesn't match.
-11
-Error (line 21): The number of parameters doesn't match.
-12
-Error (line 21): The number of parameters doesn't match.
-
-CSX compilation halted due to type errors.
+No CSX type errors detected.
 
 
 Begin CSX compilation of ./tests/test-38.csx.
@@ -240,14 +250,7 @@ No CSX type errors detected.
 Begin CSX compilation of ./tests/test-41.csx.
 
 CSX program parsed correctly.
-6
-Error (line 20): The number of parameters doesn't match.
-7
-Error (line 20): The number of parameters doesn't match.
-9
-Error (line 20): The number of parameters doesn't match.
-
-CSX compilation halted due to type errors.
+No CSX type errors detected.
 
 
 Begin CSX compilation of ./tests/test-42.csx.

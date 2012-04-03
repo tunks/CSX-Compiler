@@ -14,8 +14,8 @@
 ###
 
 DESTPATH = ./classes
-#COURSEDIR = /homes/raphael/courses/cs541/public
-COURSEDIR = /Users/chenliu/vim-git/compiler-design/public
+COURSEDIR = /homes/raphael/courses/cs541/public
+#COURSEDIR = /Users/chenliu/vim-git/compiler-design/public
 CUPPATH = $(COURSEDIR)/cup
 CLASSPATH = $(DESTPATH):$(CUPPATH)/java-cup-10k.jar
 VPATH = $(DESTPATH)
@@ -23,7 +23,6 @@ JCFLAGS = -Xlint:all -deprecation -classpath $(CLASSPATH) -d $(DESTPATH)
 JFLAGS = -classpath $(CLASSPATH)
 #TESTDIR = $(COURSEDIR)/proj4/tests
 TESTDIR = ./tests
-TESTFILE = $(wildcard *.csx)
 
 %.class: %.java
 	javac $(JCFLAGS) $<
@@ -46,9 +45,10 @@ ASTNode.class: ast.java sym.class SymbolTable.class SymbolInfo.class
 P4.class: Yylex.class Scanner.class parser.class ASTNode.class
 
 test: all
+	java $(JFLAGS) P4 $(TESTDIR)/myTest.csx  >> TestResults
 	java $(JFLAGS) P4 $(TESTDIR)/test-00.csx >> TestResults
 	java $(JFLAGS) P4 $(TESTDIR)/test-01.csx >> TestResults
-	java $(JFLAGS) P4 $(TESTDIR)/test-02.csx >> TestResults 
+	java $(JFLAGS) P4 $(TESTDIR)/test-02.csx >> TestResults
 	java $(JFLAGS) P4 $(TESTDIR)/test-03.csx >> TestResults
 	java $(JFLAGS) P4 $(TESTDIR)/test-04.csx >> TestResults
 	java $(JFLAGS) P4 $(TESTDIR)/test-05.csx >> TestResults
@@ -79,7 +79,7 @@ test: all
 	java $(JFLAGS) P4 $(TESTDIR)/test-31.csx >> TestResults
 	java $(JFLAGS) P4 $(TESTDIR)/test-32.csx >> TestResults
 	java $(JFLAGS) P4 $(TESTDIR)/test-33.csx >> TestResults
-	java $(JFLAGS) P4 $(TESTDIR)/test-36.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-36.csx >> TestResults	
 	java $(JFLAGS) P4 $(TESTDIR)/test-37.csx >> TestResults
 	java $(JFLAGS) P4 $(TESTDIR)/test-38.csx >> TestResults
 	java $(JFLAGS) P4 $(TESTDIR)/test-39.csx >> TestResults

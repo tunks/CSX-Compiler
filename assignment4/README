@@ -1,0 +1,30 @@
+Project Name: CSX Type Checker
+Author:       Chen Liu
+Email:        chen.liu@uky.edu
+
+
+1.Description
+This project implements the type checker for CSX programs.
+
+
+2.Instruction to compile the program
+
+   make
+
+The command above compiles or recompiles classes. The ".class" files are placed
+in subdirectory classes.
+
+
+3.Instruction to run the program
+
+   make test
+
+The command above will run my own test program(named myTest.csx) and other 40
+given test programs. All test programs are placed in subdirectory tests.
+
+It first parses these programs and then executes type check function. The output
+file is TestResults.
+
+
+
+

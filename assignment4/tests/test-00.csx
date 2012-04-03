@@ -9,23 +9,9 @@
 
 class p00csx{
 
- int abc(int a, int b) {
-    return a+b;
- }
-
- void d(bool c) {
-    bool a;
-    a = c;
- }
-
  void main(){
-    int c;
-    c = abc(3, 4);
-    d(c);
-	print("");
+  print("Testing Program p00csx\n");
+  print("Test completed\n");
  }
-
-
-
 
 }

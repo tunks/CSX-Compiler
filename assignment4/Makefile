@@ -46,7 +46,46 @@ ASTNode.class: ast.java sym.class SymbolTable.class SymbolInfo.class
 P4.class: Yylex.class Scanner.class parser.class ASTNode.class
 
 test: all
-	java $(JFLAGS) P4 $(TESTDIR)/test-00.csx
+	java $(JFLAGS) P4 $(TESTDIR)/test-00.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-01.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-02.csx >> TestResults 
+	java $(JFLAGS) P4 $(TESTDIR)/test-03.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-04.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-05.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-06.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-07.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-08.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-09.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-10.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-11.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-12.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-13.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-14.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-15.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-16.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-18.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-19.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-20.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-21.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-22.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-23.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-24.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-25.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-26.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-27.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-28.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-29.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-30.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-31.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-32.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-33.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-36.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-37.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-38.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-39.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-40.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-41.csx >> TestResults
+	java $(JFLAGS) P4 $(TESTDIR)/test-42.csx >> TestResults
 
 ###
 # style check

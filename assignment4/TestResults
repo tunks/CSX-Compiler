@@ -1,0 +1,256 @@
+
+
+Begin CSX compilation of ./tests/test-00.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-01.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-02.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-03.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-04.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-05.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-06.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-07.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-08.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-09.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-10.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-11.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-12.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-13.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-14.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-15.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-16.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-18.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-19.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-20.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-21.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-22.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-23.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-24.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-25.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-26.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-27.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-28.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-29.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-30.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-31.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-32.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-33.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-36.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-37.csx.
+
+CSX program parsed correctly.
+9
+Error (line 21): The number of parameters doesn't match.
+10
+Error (line 21): The number of parameters doesn't match.
+11
+Error (line 21): The number of parameters doesn't match.
+12
+Error (line 21): The number of parameters doesn't match.
+
+CSX compilation halted due to type errors.
+
+
+Begin CSX compilation of ./tests/test-38.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-39.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-40.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.
+
+
+Begin CSX compilation of ./tests/test-41.csx.
+
+CSX program parsed correctly.
+6
+Error (line 20): The number of parameters doesn't match.
+7
+Error (line 20): The number of parameters doesn't match.
+9
+Error (line 20): The number of parameters doesn't match.
+
+CSX compilation halted due to type errors.
+
+
+Begin CSX compilation of ./tests/test-42.csx.
+
+CSX program parsed correctly.
+No CSX type errors detected.

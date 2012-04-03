@@ -552,7 +552,6 @@ class methodDeclNode extends ASTNode {
 		decls = f;
 		stmts = s;
         os = o;
-        stmts.parentNode = id.idname;
 	}
 
     void Unparse(int indent) {
@@ -612,6 +611,7 @@ class methodDeclNode extends ASTNode {
         args.parentNode = name.idname;
         args.checkTypes();
         decls.checkTypes();
+        stmts.parentNode = name.idname;
         stmts.checkTypes();
         try {
             st.closeScope();
@@ -852,7 +852,18 @@ class asgNode extends stmtNode {
                 typeErrors++;
                 target.type = new Types(Types.Error);
             }
-        } else {
+        } else if (target.kind.val == Kinds.Array && source.kind.val == Kinds.Array) {
+            if (target.type.val != source.type.val || target.size != source.size) {
+                System.out.println(error() + "Only same size and component type may be assignmented.");
+                typeErrors++;
+            }
+        } else if (source.kind.val == Kinds.Value && source.type.val == Types.Character && target.kind.val == Kinds.Array) {
+            if (target.size != 1 || target.type.val != Types.Character) {
+                    System.out.println(error() + "Only same size and component type may be assignmented.");
+                    typeErrors++;
+            }
+        }
+        else {
             typesMustBeEqual(source.type.val, target.type.val,
                 error() + "The two hand sides of assignment"
                 + " don't have same type.");
@@ -915,6 +926,7 @@ class ifThenNode extends stmtNode {
 
     void checkTypes() {
         thenPart.parentNode = this.parentNode;
+        elsePart.parentNode = this.parentNode;
         condition.checkTypes();
         typeMustBe(condition.type.val, Types.Boolean,
             error() + "The control expression of an" +
@@ -1112,25 +1124,15 @@ class printNode extends stmtNode {
         morePrints.checkTypes();
 
         //System.out.println(outputValue.type.toString());
-        if (outputValue.kind.val == Kinds.Var) {
-            if (outputValue.type.val != Types.Boolean && outputValue.type.val != 
+        if (outputValue.kind.val == Kinds.Array) {
+            typeMustBe(outputValue.type.val, Types.Character,
+                error() + "For arrays, only char arrays may be written.");
+        } else if (outputValue.type.val == Types.String) {
+        } else if (outputValue.type.val != Types.Boolean && outputValue.type.val != 
                 Types.Character) {
                     typeMustBe(outputValue.type.val, Types.Integer,
                 error() + "For values, only int, char, and bool values may be printed.");
-            }
-        } else if (outputValue.kind.val == Kinds.Array) {
-            typeMustBe(outputValue.type.val, Types.Character,
-                error() + "For arrays, only char arrays may be written.");
-        } else if (outputValue.kind.val == Kinds.Value) {
-            typeMustBe(outputValue.type.val, Types.String,
-                error() + "For literals, only string literals may be written.");
-        } else {
-            System.out.println(error() + "Only int, bool, char values, char arrays, and string"
-                  + " literals may be written.");
-            typeErrors++;
-            outputValue.type = new Types(Types.Error);
-
-        }
+        } 
     } // checkTypes
 
 	static nullPrintNode NULL = new nullPrintNode();
@@ -1213,7 +1215,8 @@ class callNode extends stmtNode {
                         break;
                     }
                 }
-
+                id.parmListType.clear();
+                id.parmListKind.clear();
             } else {
                 System.out.println(error() + "The number of parameters doesn't match.");
                 typeErrors++;
@@ -1483,6 +1486,7 @@ class booleanOpNode extends exprNode {
                 error() + "Only bool values may be applied.");
         }
         type = new Types(Types.Boolean);
+        size = expr.size;
         //kind = expr.kind;
      } // checkTypes
 
@@ -1540,13 +1544,16 @@ class relationOpNode extends exprNode {
               typeMustBe(firstFactor.type.val, Types.Integer,
                   error() + "Only int, char and bool values may be applied in"
                   + " relational operators.");
-            } else {
-                typesMustBeEqual(firstFactor.type.val, secondFactor.type.val,
-                    error() + "The two hand sides of relation"
-                    + " operators don't have same type.");
+            }
+            if (secondFactor.type.val != Types.Integer && secondFactor.type.val 
+                    != Types.Character && secondFactor.type.val != Types.Boolean) {
+              typeMustBe(secondFactor.type.val, Types.Integer,
+                    error() + "Only int, char and bool values may be applied in"
+                  + " relational operators.");
             }
         }
         type = new Types(Types.Boolean);
+        size = firstFactor.size;
         //kind = firstFactor.type;
     } // checkTypes
 
@@ -1561,6 +1568,7 @@ class relationOpNode extends exprNode {
     private final exprNode firstFactor;
     private final exprNode secondFactor;
     private final int operatorCode;
+    public int size;
 } // class relationOpNode
 
 class factorNode extends exprNode {
@@ -1613,17 +1621,16 @@ class factorNode extends exprNode {
             if (factor.type.val != Types.Integer && 
                 factor.type.val != Types.Character) {
                 typeMustBe(factor.type.val, Types.Integer,
-                    error() + "Only int and char values may be applied"
-                    + " in arithmetic operators.");
+                    error() + "LeftOperand must be int or char type.");
             }
             if (pri.type.val != Types.Integer &&
                 pri.type.val != Types.Character) {
                 typeMustBe(pri.type.val, Types.Integer,
-                    error() + "Only int and char values may be applied"
-                    + " in arithmetic operators.");
+                    error() + "RightOperand must be int or char type.");
             }
         }
         type = new Types(Types.Integer);
+        size = factor.size;
     } // checkTypes
 
     private final exprNode factor;
@@ -1678,17 +1685,16 @@ class binaryOpNode extends exprNode {
             if (leftOperand.type.val != Types.Integer && 
                 leftOperand.type.val != Types.Character) {
                 typeMustBe(leftOperand.type.val, Types.Integer,
-                    error() + "Only int and char values may be applied"
-                    + " in arithmetic operators.");
+                    error() + "LeftOperand must be int or char type.");
             }
-            if (leftOperand.type.val != Types.Integer &&
-                leftOperand.type.val != Types.Character) {
-                typeMustBe(leftOperand.type.val, Types.Integer,
-                    error() + "Only int and char values may be applied"
-                    + " in arithmetic operators.");
+            if (rightOperand.type.val != Types.Integer &&
+                rightOperand.type.val != Types.Character) {
+                typeMustBe(rightOperand.type.val, Types.Integer,
+                    error() + "RightOperand must be int or char type.");
             }
         }
         type = new Types(Types.Integer);
+        size = leftOperand.size;
     } // checkTypes
 
 	private final exprNode leftOperand;
@@ -1731,6 +1737,7 @@ class unaryOpNode extends exprNode {
                 type = new Types(Types.Error);
             }
         }
+        size = operand.size;
     } // checkTypes
 
 	private final exprNode operand;
@@ -1754,6 +1761,11 @@ class castNode extends exprNode {
     void checkTypes() {
         resultType.checkTypes();
         operand.checkTypes();
+        if (operand.type.val != Types.Integer && operand.type.val != Types.Character && operand.type.val != Types.Boolean) {
+            typeMustBe(operand.type.val, Types.Integer,
+                error() + "Only int, char and bool type may"
+                + " be type-cast.");
+        }
         type = resultType.type;
     } // checkTypes
 
@@ -1834,7 +1846,10 @@ class fctCallNode extends exprNode {
                     break;
                 }
             }
+            id.parmListType.clear();
+            id.parmListKind.clear();
         } else {
+            System.out.println(id.parmListType.size());
             System.out.println(error() + "The number of parameters doesn't match.");
             typeErrors++;
         }
@@ -1897,6 +1912,7 @@ class identNode extends exprNode {
                 type = new Types(Types.Error);
             }
         } // id != null
+        size = id.size;
     } // checkTypes
 
 	public String idname;
@@ -1940,6 +1956,10 @@ class nameNode extends exprNode {
             type = varName.type;
             kind = varName.kind;
         }
+        if (subscriptVal.isNull() != true) {
+            kind = new Kinds(Kinds.Var);
+        }
+        size = varName.size;
     } // checkTypes
 
 

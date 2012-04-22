@@ -13,30 +13,20 @@ class SymbolInfo extends Symb {
  public Types type; // Should always be Integer or Boolean in CSX-lite
                     // Should be Integer, Boolean, Character, String, Void,
                     //           Error and Unknown in CSX
-
- public int varIndex; // Index used to address a variable
-
  public int size;
 
- public static int hasWrittenMain = 0;
+ public LinkedList <Types>listType = new LinkedList<Types>();
+// grader: better to declare as List, even if you assign a LinkedList.  -0
 
- public static int hasStoreField = 0;
+ public LinkedList <Kinds>listKind = new LinkedList<Kinds>();
 
- public static String className;
+ public LinkedList <Types>parmListType = new LinkedList<Types>();
 
- public String fieldInfo;
+ public LinkedList <Kinds>parmListKind = new LinkedList<Kinds>();
 
- public List <Types>listType = new LinkedList<Types>();
+ public LinkedList <Types>backupParmListType = new LinkedList<Types>();
 
- public List <Kinds>listKind = new LinkedList<Kinds>();
-
- public List <Types>parmListType = new LinkedList<Types>();
-
- public List <Kinds>parmListKind = new LinkedList<Kinds>();
-
- public List <Types>backupParmListType = new LinkedList<Types>();
-
- public List <Kinds>backupParmListKind = new LinkedList<Kinds>();
+ public LinkedList <Kinds>backupParmListKind = new LinkedList<Kinds>();
 
  public SymbolInfo(String id, Kinds k, Types t){
 	super(id);
@@ -47,5 +37,4 @@ class SymbolInfo extends Symb {
  public String toString(){
              return "("+name()+": kind=" + kind+ ", type="+  type+")";};
 }
-
 

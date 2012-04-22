@@ -1,11 +1,9 @@
 class test {
-	int a;
-
     void main() {	
-	    char b;
-        read(b);
-        read(a);
-        print(a,b);
+        const c = 100;
+        char cd[5];
+        int a = 45;
+        print(c,"\n","abcd");
         return;
     }
 }

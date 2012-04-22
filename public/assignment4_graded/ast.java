@@ -1,4 +1,3 @@
-import java.io.*;
 import java.util.*;
 
 abstract class ASTNode {
@@ -8,25 +7,13 @@ abstract class ASTNode {
 	int colnum;
     int size;
 
-    static PrintStream afile; // File to generate JVM code into
-
-    static int typeErrors = 0;     // Total number of type errors found
-    static int cgErrors = 0;       // Total number of code gen errors
-
-    static int numberOfLocals = 0; // Total number of local vars
-
-    static int labelCnt = 0;       // Counter used to gen unique labels
+    static int typeErrors = 0; // Total number of type errors found
 
 	static void genIndent(int indent) {
 		for (int i = 1; i <= indent; i += 1) {
 			System.out.print("\t");
 		}
 	} // genIndent
-
-    static void myAssert(boolean assertion) {
-        if (! assertion)
-             throw new RuntimeException();
-    }
 
     static void mustBe(boolean assertion) {
         if (! assertion) {
@@ -61,47 +48,13 @@ abstract class ASTNode {
 
     void findClass(String str) {
         if (this.toString() == str)
+// grader: less error-prone always to use braces on an "if". -0
             findResult = true;
     } // findClass
 
     String error() {
         return "Error (line " + linenum + "): ";
     } // error
-
-    // generate an instruction w/ 0 operand
-    static void gen(String opcode) {
-        afile.println("\t"+opcode);
-    }
-
-    // generate an instruction w/ 1 operand
-    static void gen(String opcode, String operand) {
-        afile.println("\t"+opcode+"\t"+operand);
-    }
-
-    static void gen(String opcode, int operand) {
-        afile.println("\t"+opcode+"\t"+operand);
-    }
-
-    // generate an instruction w/ 2 operands
-    static void gen(String opcode, String operand1, String operand2) {
-        afile.println("\t"+opcode+"\t"+operand1+" "+operand2);
-    }
-
-    // generate an instruction w/ 2 operands
-    static void gen(String opcode, String operand1, int operand2) {
-        afile.println("\t"+opcode+"\t"+operand1+" "+operand2);
-    }
-
-    // build label of form labeln
-    String buildlabel(int suffix) {
-        return "label"+suffix;
-    }
-
-    // generate a label for an instruction
-    void genlab(String label) {
-        afile.println(label+":");
-    }
-
 
     public static SymbolTable st = new SymbolTable();
 
@@ -131,33 +84,21 @@ abstract class ASTNode {
 
     void checkTypes() {}
         // This will normally need to be redefined in a subclass
-
-
-    //  codegen translates the AST rooted by this node 
-    //      into JVM code which is written in asmFile
-    //  If no errors occur during code generation,
-    //    TRUE is returned, and asmFile should contain a
-    //      complete and correct JVM program.
-    //  Otherwise, FALSE is returned and asmFile need not
-    //    contain a valid program.
-
-    boolean codegen(PrintStream asmfile) {
-        throw new Error();
-    } // This version of codegen should never be called
-
-    //  cg translates its AST node into JVM code
-    //  The code which is written in the shared PrintStream variable
-    //    afile (set by codegen)
-
-    void cg(){}; // This member is normally overridden in subclasses
-
 } // abstract class ASTNode
 
 class nullNode extends ASTNode {
 // This class definition probably doesn't need to be changed
-	nullNode() {super();};
-	boolean isNull() {return true;};
-	void Unparse(int indent) {};
+	nullNode() {
+		super();
+	}
+
+	boolean isNull() {
+		return true;
+	}
+
+	void Unparse(int indent) {
+		// no action
+	}
 } // class nullNode
 
 // This node is used to root CSX lite programs 
@@ -202,12 +143,11 @@ class classNode extends ASTNode {
     void checkTypes() {
         //className.checkTypes(); // class name never conflicts with any other
                                   // declaration
-        members.parentNode = "class";
         members.checkTypes();
         SymbolInfo id;
         id = (SymbolInfo) st.localLookup("main");
         if (id == null) {
-            System.out.println(error() + "Not declare main method in the class.");
+            System.out.println(error() + "Don't declare main method in the class.");
             typeErrors++;
         }
     }
@@ -225,20 +165,6 @@ class classNode extends ASTNode {
       System.out.println(linenum + ":" + " } EOF");
     }
 
-    boolean codegen(PrintStream asmfile) {
-        afile = asmfile;
-        cg();
-        return (cgErrors == 0);
-    }
-
-    void cg() {
-        SymbolInfo.className = className.idname;
-        gen(".class","public",className.idname);
-        gen(".super","java/lang/Object\n");
-
-        members.cg();
-    }
-
 	private final identNode className;
 	private final memberDeclsNode members;
 } // class classNode
@@ -247,23 +173,14 @@ class memberDeclsNode extends ASTNode {
     memberDeclsNode () {
       super();
     }
-	memberDeclsNode(declNode f, memberDeclsNode mm, int line, int col) {
+	memberDeclsNode(declNode f, methodDeclsNode m, memberDeclsNode mm, int line, int col) {
 		super(line, col);
 		fields = f;
-		methods = methodDeclsNode.NULL;
+		methods = m;
         moreMembers = mm;
 	} // memberDeclsNode
 
-    memberDeclsNode(methodDeclsNode m, int line, int col) {
-        super(line, col);
-        fields = declNode.NULL;
-        moreMembers = memberDeclsNode.NULL;
-        methods = m;
-    }
-
     void checkTypes() {
-        fields.parentNode = this.parentNode;
-        moreMembers.parentNode = this.parentNode;
         fields.checkTypes();
         methods.checkTypes();
         moreMembers.checkTypes();
@@ -273,24 +190,6 @@ class memberDeclsNode extends ASTNode {
       moreMembers.Unparse(indent);
       methods.Unparse(indent);
     } // Unparse
-
-    void cg() {
-        fields.cg();
-        if (moreMembers.fields == null) {
-            gen(".method"," public static","main([Ljava/lang/String;)V");
-            //System.out.println(fields.getClass().getName());
-            gen("invokestatic",SymbolInfo.className+"/main()V"); // className /main()V
-            gen("return");
-            gen(".limit", "stack", 2);
-            gen(".end method\n");
-            SymbolInfo.hasWrittenMain = 1;
-            /*
-             * Need to store initValue
-             */
-        }
-        moreMembers.cg();
-        methods.cg();
-    }
 
     static nullMemberDeclsNode NULL = new nullMemberDeclsNode();
 	private declNode fields;
@@ -303,7 +202,6 @@ class nullMemberDeclsNode extends memberDeclsNode {
   boolean isNull() {return true;}
   void Unparse(int indent) {}
   void checkTypes() {}
-  void cg() {}
 }
 
 class fieldDeclsNode extends ASTNode {
@@ -322,15 +220,8 @@ class fieldDeclsNode extends ASTNode {
     }
 
     void checkTypes() {
-        thisField.parentNode = this.parentNode;
-        moreFields.parentNode = this.parentNode;
         thisField.checkTypes();
         moreFields.checkTypes();
-    }
-
-    void cg() {
-        thisField.cg();
-        moreFields.cg();
     }
 
 	static nullFieldDeclsNode NULL = new nullFieldDeclsNode();
@@ -345,7 +236,6 @@ class nullFieldDeclsNode extends fieldDeclsNode {
 	}
 	void Unparse(int indent) {}
     void checkTypes() {}
-    void cg() {}
 } // class nullFieldDeclsNode
 
 // abstract superclass; only subclasses are actually created
@@ -364,7 +254,6 @@ class nullDeclNode extends declNode {
     boolean isNull() {return true;}
     void Unparse(int ident) {}
     void checkTypes() {}
-    void cg() {}
 }
 
 class varDeclNode extends declNode {
@@ -417,29 +306,6 @@ class varDeclNode extends declNode {
         } // id != null
     } // checkTypes
 
-    void cg() {
-        // Given this variable an index equal to numberOfLocals
-        //   and remember index in ST
-          if ("class".equals(this.parentNode)) {
-              varName.idinfo.varIndex = -1;
-              varName.idinfo.fieldInfo = SymbolInfo.className+"/"+varName.idname;
-              gen(".field static",varName.idname,varType.returnType());
-          }
-          else {
-              varName.idinfo.varIndex = numberOfLocals;
-              // Increment numberOfLocals used in this prog
-              numberOfLocals++;
-          }
-        if (!initValue.isNull()) {
-            initValue.cg();
-            if ("class".equals(this.parentNode)) {
-                gen("putstatic",varName.idinfo.fieldInfo,varType.returnType());
-            } else {
-                gen("istore",varName.idinfo.varIndex);
-            }
-        }
-    } // cg
-
 	private final identNode varName;
 	private final typeNode varType;
 	private final exprNode initValue;
@@ -485,37 +351,6 @@ class constDeclNode extends declNode {
         } // id != null
     } // checkTypes()
 
-    void cg() {
-        if ("class".equals(this.parentNode)) {
-          constName.idinfo.varIndex = -1;
-          constName.idinfo.fieldInfo = SymbolInfo.className+"/"+constName.idname;
-          if (constValue.type.val == Types.Integer)
-            gen(".field static",constName.idname,"I");
-          else if (constValue.type.val == Types.Boolean)
-            gen(".field static",constName.idname,"Z");
-          else if (constValue.type.val == Types.Character)
-            gen(".field static",constName.idname,"C");
-          else if (constValue.type.val == Types.String)
-            gen(".field static",constName.idname,"S");
-          /*
-           * Need to check if "S" are correct.
-           */
-        }
-        else {
-            constName.idinfo.varIndex = numberOfLocals;
-            numberOfLocals++;
-        }
-        constValue.cg();
-        if ("class".equals(this.parentNode)) {
-            //gen("putstatic",constName.idinfo.fieldInfo,varType.returnType());
-            /*
-             * Need to do store value to field
-             */
-        } else {
-            gen("istore",constName.idinfo.varIndex);
-        }
-    }
-
 	private final identNode constName;
 	private final exprNode constValue;
 } // class constDeclNode
@@ -538,7 +373,7 @@ class arrayDeclNode extends declNode {
         System.out.print("[");
         arraySize.Unparse(0);
         System.out.println("];");
-    } // Unparse
+    }
 
     void checkTypes() {
         SymbolInfo id;
@@ -568,14 +403,6 @@ class arrayDeclNode extends declNode {
         } // id != null
     } //checkTypes
 
-    void cg() {
-         arrayName.idinfo.varIndex = numberOfLocals;
-         numberOfLocals++;
-         arraySize.cg();
-         gen("newarray", elementType.returnFullType());
-         gen("astore", arrayName.idinfo.varIndex);
-    } // cg
-
 	private final identNode arrayName;
 	private final typeNode elementType;
 	private final intLitNode arraySize;
@@ -590,8 +417,6 @@ abstract class typeNode extends ASTNode {
 		super(l, c);
         type = t;
 	}
-    String returnType(){return null;}
-    String returnFullType() {return null;}
 	static nullTypeNode NULL = new nullTypeNode();
     Types type; // Used for typechecking -- the type of this typeNode
 } // class typeNode
@@ -603,7 +428,6 @@ class nullTypeNode extends typeNode {
 	}
 	void Unparse(int indent) {}
     void checkTypes() {}
-    void cg() {}
 } // class nullTypeNode
 
 class intTypeNode extends typeNode {
@@ -614,12 +438,6 @@ class intTypeNode extends typeNode {
       genIndent(indent);
       System.out.print("int");
     } // Unparse
-    String returnType() {
-        return "I";
-    }
-    String returnFullType() {
-        return "int";
-    }
     void checkTypes() {
         // No type checking needed
     } // checkTypes
@@ -633,12 +451,6 @@ class boolTypeNode extends typeNode {
       genIndent(indent);
       System.out.print("bool");
     } // Unparse
-    String returnType() {
-        return "Z";
-    }
-    String returnFullType() {
-        return "boolean";
-    }
     void checkTypes() {
         // No type checking needed
     } // checkTypes
@@ -652,12 +464,6 @@ class charTypeNode extends typeNode {
       genIndent(indent);
       System.out.print("char");
     } // Unparse
-    String returnType() {
-        return "C";
-    }
-    String returnFullType() {
-        return "char";
-    }
     void checkTypes() {
         // No type checking needed
     } // checkTypes
@@ -674,12 +480,6 @@ class voidTypeNode extends typeNode {
     void checkTypes() {
         // No type checking needed
     } // checkTypes
-    String returnType() {
-        return "V";
-    }
-    String returnFullType() {
-        return "void";
-    }
 } // class voidTypeNode
 
 class optionalSemiNode extends ASTNode {
@@ -691,10 +491,13 @@ class optionalSemiNode extends ASTNode {
         semisym = semi;
     }
 
+    /* need to do(grade) */
+
     void Unparse(int indent) {
         if (semisym == sym.SEMI) {
           System.out.print(";");
         }
+        //System.out.print("\n");
     }
 
     private int semisym;
@@ -721,17 +524,12 @@ class methodDeclsNode extends ASTNode {
     void Unparse(int indent) {
         thisDecl.Unparse(0);
         moreDecls.Unparse(0);
-    } // Unparse
+    }
 
     void checkTypes() {
         thisDecl.checkTypes();
         moreDecls.checkTypes();
-    } // checkTypes
-
-    void cg() {
-        thisDecl.cg();
-        moreDecls.cg();
-    } // cg
+    }
 
 	static nullMethodDeclsNode NULL = new nullMethodDeclsNode();
 	private methodDeclNode thisDecl;
@@ -743,7 +541,6 @@ class nullMethodDeclsNode extends methodDeclsNode {
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
-    void cg() {}
 } // class nullMethodDeclsNode 
 
 class methodDeclNode extends ASTNode {
@@ -774,8 +571,8 @@ class methodDeclNode extends ASTNode {
         System.out.print("}");
         os.Unparse(0);
         System.out.print("\n");
-    } // Unparse
-
+    }
+    
     void checkTypes() {
         SymbolInfo id;
         if (name.idname.compareTo("main") == 0) {
@@ -824,43 +621,7 @@ class methodDeclNode extends ASTNode {
         }
     } // checkTypes
 
-    void cg() {
-        storeNumOfLocals = numberOfLocals;
-        numberOfLocals = 0;
-        args.cg();
-        if (args.isNull()) {
-            gen(".method","public static",name.idname+"()"+returnType.returnType());
-        }
-        else {
-            // Add args within ()
-            calArgs = args;
-            if (!calArgs.returnMoreDecls().isNull()) {
-                argsType = calArgs.returnThisDecl().returnArgsType();
-                calArgs = calArgs.returnMoreDecls();
-            }
-            while (!calArgs.returnMoreDecls().isNull()) {
-                argsType += calArgs.returnThisDecl().returnArgsType();
-                calArgs = calArgs.returnMoreDecls();
-            }
-            argsType += calArgs.returnThisDecl().returnArgsType();
-            gen(".method","public static",name.idname+"("+argsType+")"+returnType.returnType());
-        }
-        decls.cg();
-        stmts.cg();
-        if (numberOfLocals > 0) {
-            gen(".limit","locals",numberOfLocals);
-        }
-        gen(".limit","stack",10);
-        gen(".end","method\n");
-        numberOfLocals = storeNumOfLocals;
-    } // cg
-
-
-    private String argsType;
-    private argDeclsNode calArgs;
-    private int storeNumOfLocals;
-	
-    private final identNode name;
+	private final identNode name;
 	private final argDeclsNode args;
 	private final typeNode returnType;
 	private final fieldDeclsNode decls;
@@ -876,7 +637,6 @@ abstract class argDeclNode extends ASTNode {
 	argDeclNode(int l, int c) {
 		super(l, c);
 	}
-    String returnArgsType() {return null;};
 }
 
 class argDeclsNode extends ASTNode {
@@ -896,22 +656,14 @@ class argDeclsNode extends ASTNode {
             System.out.print(" , ");
             moreDecls.Unparse(0);
         }
-    } // Unparse
+    }
 
     void checkTypes() {
         thisDecl.parentNode = this.parentNode;
         moreDecls.parentNode = this.parentNode;
         thisDecl.checkTypes();
         moreDecls.checkTypes();
-    } // checkTypes
-
-    void cg() {
-        thisDecl.cg();
-        moreDecls.cg();
-    } // cg
-
-    argDeclNode returnThisDecl() {return this.thisDecl;}
-    argDeclsNode returnMoreDecls() {return this.moreDecls;}
+    }
 
 	private argDeclNode thisDecl;
 	private argDeclsNode moreDecls;
@@ -922,7 +674,6 @@ class nullArgDeclsNode extends argDeclsNode {
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
-    void cg() {}
 } // class nullArgDeclsNode 
 
 class arrayArgDeclNode extends argDeclNode {
@@ -937,7 +688,7 @@ class arrayArgDeclNode extends argDeclNode {
         System.out.print(" ");
         argName.Unparse(0);
         System.out.print("[ ]");
-    } // Unparse
+    }
 
     void checkTypes() {
         SymbolInfo id;
@@ -968,15 +719,6 @@ class arrayArgDeclNode extends argDeclNode {
         } // id != null
     } // checkTypes
 
-    String returnArgsType() {
-        return "["+elementType.returnType();
-    } // returnArgsType
-
-    void cg() {
-        argName.idinfo.varIndex = numberOfLocals;
-        numberOfLocals++;
-    } // cg
-
 	private final identNode argName;
 	private final typeNode elementType;
 } // class arrayArgDeclNode 
@@ -992,7 +734,7 @@ class valArgDeclNode extends argDeclNode {
         argType.Unparse(0);
         System.out.print(" ");
         argName.Unparse(0);
-    } // Unparse
+    }
 
     void checkTypes() {
         SymbolInfo id;
@@ -1023,15 +765,6 @@ class valArgDeclNode extends argDeclNode {
         } // id != null
     } //checkTypes
 
-    String returnArgsType() {
-        return argType.returnType();
-    } // returnArgsType
-
-    void cg() {
-        argName.idinfo.varIndex = numberOfLocals;
-        numberOfLocals++;
-    } // cg
-
 	private final identNode argName;
 	private final typeNode argType;
 } // class valArgDeclNode 
@@ -1052,7 +785,6 @@ class nullStmtNode extends stmtNode {
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
-    void cg() {}
 } // class nullStmtNode 
 
 class stmtsNode extends ASTNode {
@@ -1078,10 +810,6 @@ class stmtsNode extends ASTNode {
         thisStmt.checkTypes();
         moreStmts.checkTypes();
     } // checkTypes
-    void cg() {
-        thisStmt.cg();
-        moreStmts.cg();
-    } // cg
 
 	static nullStmtsNode NULL = new nullStmtsNode();
 	private stmtNode thisStmt;
@@ -1094,7 +822,6 @@ class nullStmtsNode extends stmtsNode {
 	void Unparse(int indent) {}
     void checkTypes() {}
     void findClass(String str) {}
-    void cg() {}
 } // class nullStmtsNode 
 
 class asgNode extends stmtNode {
@@ -1130,11 +857,13 @@ class asgNode extends stmtNode {
         } else if (target.kind.val == Kinds.Array && source.kind.val == Kinds.Array) {
             if (target.type.val != source.type.val || target.size != source.size) {
                 System.out.println(error() + "Only same size and component type may be assigned.");
+// grader: spelling: assigned.  -0
                 typeErrors++;
             }
         } else if (source.kind.val == Kinds.Value && source.type.val == Types.Character && target.kind.val == Kinds.Array) {
             if (target.size != 1 || target.type.val != Types.Character) {
                     System.out.println(error() + "Only same size and component type may be assigned.");
+// grader: spelling: assigned.  -0
                     typeErrors++;
             }
         }
@@ -1144,35 +873,6 @@ class asgNode extends stmtNode {
                 + " don't have same type.");
         }
     } // checkTypes
-
-    void cg() {
-        target.parentNode = "target";
-        gen("; begin asg operation");
-        target.cg();
-          /*
-           * Need to check array length
-           */
-        source.cg();
-        if ("strLitNode".equals(source.getClass().getName()))
-            gen("invokestatic", "CSXLib/convertString(Ljava/lang/String;)[C");
-
-        if (target.returnVarName().idinfo.kind.val == Kinds.Array ||
-            target.returnVarName().idinfo.kind.val == Kinds.ArrayParm) {
-            if (target.returnSub().isNull())
-               gen("astore", target.returnVarName().idinfo.varIndex);
-            else {
-              if (target.returnVarName().idinfo.type.val == Types.Integer)
-                gen("iastore");
-              else if (target.returnVarName().idinfo.type.val == Types.Character)
-                gen("castore");
-              else if (target.returnVarName().idinfo.type.val == Types.Boolean)
-                gen("bastore");
-            }
-        }
-        else {
-            gen("istore", target.returnVarName().idinfo.varIndex);
-        }
-    } // cg
 
 	private final nameNode target;
 	private final exprNode source;
@@ -1237,7 +937,7 @@ class ifThenNode extends stmtNode {
 	} // Unparse
 
     void checkTypes() {
-        if ("while".equals(this.brotherNode)) {
+        if (this.brotherNode == "while") {
             thenPart.brotherNode = "while";
             elsePart.parentNode = "while";
         }
@@ -1354,9 +1054,6 @@ class readListNode extends stmtNode {
     void checkTypes() {
         read.checkTypes();
     } // checkTypes
-    void cg(){
-        read.cg();
-    } // cg
 
     private final readNode read;
 } // class readListNode 
@@ -1387,24 +1084,6 @@ class readNode extends stmtNode {
         moreReads.checkTypes();
     } // checkTypes
 
-    void cg() {
-        if (targetVar.type.val == Types.Integer) {
-            gen("invokestatic", "CSXLib/readInt()I");
-        } else if (targetVar.type.val == Types.Character) {
-            gen("invokestatic", "CSXLib/readChar()C");
-        }
-        if (targetVar.returnVarName().idinfo.varIndex != -1) {
-            gen("istore", targetVar.returnVarName().idinfo.varIndex);
-        } else {
-            if (targetVar.type.val == Types.Integer) {
-                gen("putstatic", targetVar.returnVarName().idinfo.fieldInfo, "I");
-            } else if (targetVar.type.val == Types.Character) {
-                gen("putstatic", targetVar.returnVarName().idinfo.fieldInfo, "C");
-            }
-        }
-        moreReads.cg();
-    } // cg
-
 	static nullReadNode NULL = new nullReadNode();
 	private nameNode targetVar;
 	private readNode moreReads;
@@ -1415,7 +1094,6 @@ class nullReadNode extends readNode {
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
-    void cg() {}
 } // class nullReadNode 
 
 class printListNode extends stmtNode {
@@ -1435,10 +1113,6 @@ class printListNode extends stmtNode {
    void checkTypes() {
         print.checkTypes();
    } //checkTypes
-
-   void cg() {
-        print.cg();
-   } // cg
 
    private final printNode print;
 } // class printListNode
@@ -1465,7 +1139,7 @@ class printNode extends stmtNode {
         outputValue.checkTypes();
         morePrints.checkTypes();
 
-
+        //System.out.println(outputValue.type.toString());
         if (outputValue.kind.val == Kinds.Array) {
             typeMustBe(outputValue.type.val, Types.Character,
                 error() + "For arrays, only char arrays may be written.");
@@ -1477,28 +1151,6 @@ class printNode extends stmtNode {
         } 
     } // checkTypes
 
-    void cg() {
-        gen("; print operation");
-        outputValue.cg();
-        if (outputValue.type.val == Types.String) {
-            gen("invokestatic","CSXLib/printString(Ljava/lang/String;)V");
-        } else if (outputValue.type.val == Types.Integer) {
-            gen("invokestatic","CSXLib/printInt(I)V");
-        } else if (outputValue.type.val == Types.Character && 
-            outputValue.kind.val != Kinds.Array && outputValue.kind.val != Kinds.ArrayParm) {
-            gen("invokestatic","CSXLib/printChar(C)V");
-        } else if (outputValue.type.val == Types.Boolean) {
-            gen("invokestatic","CSXLib/printBool(Z)V");
-            /*
-             * Need to check if it is Z
-             */
-        } else if (outputValue.kind.val == Kinds.Array || 
-            outputValue.kind.val == Kinds.ArrayParm) {
-            gen("invokestatic","CSXLib/printCharArray([C)V");
-        }
-        morePrints.cg();
-    } //cg
-
 	static nullPrintNode NULL = new nullPrintNode();
 	private exprNode outputValue;
 	private printNode morePrints;
@@ -1509,7 +1161,6 @@ class nullPrintNode extends printNode {
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
-    void cg() {}
 } // class nullPrintNode 
 
 class callNode extends stmtNode {
@@ -1629,15 +1280,6 @@ class returnNode extends stmtNode {
         }
     }
 
-    void cg() {
-        if (returnVal.isNull()) {
-            gen("return\n");
-        } else {
-            returnVal.cg();
-            gen("ireturn\n");
-        }
-    } // cg
-
 	private final exprNode returnVal;
 } // class returnNode 
 
@@ -1680,11 +1322,6 @@ class blockNode extends stmtNode {
         }
     } // checkTypes
 
-    void cg() {
-        decls.cg();
-        stmts.cg();
-    } // cg
-
 	private final fieldDeclsNode decls;
 	private final stmtsNode stmts;
     private final optionalSemiNode os;
@@ -1706,7 +1343,7 @@ class breakNode extends stmtNode {
 
     void checkTypes() {
         label.checkTypes();
-        if ("while".equals(this.brotherNode)) {
+        if (this.brotherNode == "while") {
             kindMustBe(label.type.val, label.kind.val, Kinds.Label, error()
                 + "The break label doesn't match while label.");
         }
@@ -1731,7 +1368,7 @@ class continueNode extends stmtNode {
 
     void checkTypes() {
         label.checkTypes();
-        if ("while".equals(this.brotherNode)) {
+        if (this.brotherNode == "while") {
             kindMustBe(label.type.val, label.kind.val, Kinds.Label, error()
                 + "The continue label doesn't match while label.");
         }
@@ -1781,11 +1418,6 @@ class argsNode extends ASTNode {
         moreArgs.checkTypes();
     } // checkTypes
 
-    void cg() {
-        argVal.cg();
-        moreArgs.cg();
-    } // cg
-
 	static nullArgsNode NULL = new nullArgsNode();
 	private exprNode argVal;
 	private argsNode moreArgs;
@@ -1798,7 +1430,6 @@ class nullArgsNode extends argsNode {
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
-    void cg() {}
 } // class nullArgsNode 
 
 // abstract superclass; only subclasses are actually created
@@ -1827,7 +1458,6 @@ class nullExprNode extends exprNode {
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
-    void cg() {}
 } // class nullExprNode 
 
 class booleanOpNode extends exprNode {
@@ -1864,10 +1494,7 @@ class booleanOpNode extends exprNode {
     void checkTypes() {
         expr.checkTypes();
         term.checkTypes();
-        if (expr.isNull()) {
-            type = term.type;
-            kind = term.kind;
-        }
+        if (expr.isNull()) {}
         else {
             mustBe(operatorCode == sym.COR
                 ||operatorCode == sym.CAND);
@@ -1875,21 +1502,11 @@ class booleanOpNode extends exprNode {
                 error() + "Only bool values may be applied.");
             typeMustBe(term.type.val, Types.Boolean,
                 error() + "Only bool values may be applied.");
-            type = new Types(Types.Boolean);
         }
-        size = term.size;
+        type = new Types(Types.Boolean);
+        size = expr.size;
         //kind = expr.kind;
      } // checkTypes
-
-     void cg() {
-        term.cg();
-        if (!expr.isNull()) {
-            expr.cg();
-            /*
-             * Need to do
-             */
-        }
-     }
 
     private final exprNode expr;
     private final exprNode term;
@@ -1935,10 +1552,7 @@ class relationOpNode extends exprNode {
     void checkTypes() {
         firstFactor.checkTypes();
         secondFactor.checkTypes();
-        if (secondFactor.isNull()) {
-            type = firstFactor.type;
-            kind = firstFactor.kind;
-        }
+        if (secondFactor.isNull()) {}
         else {
             mustBe(operatorCode == sym.LT || operatorCode == sym.GT
                 || operatorCode == sym.LEQ || operatorCode == sym.GEQ
@@ -1955,8 +1569,8 @@ class relationOpNode extends exprNode {
                     error() + "Only int, char and bool values may be applied in"
                   + " relational operators.");
             }
-            type = new Types(Types.Boolean);
         }
+        type = new Types(Types.Boolean);
         size = firstFactor.size;
         //kind = firstFactor.type;
     } // checkTypes
@@ -1968,16 +1582,6 @@ class relationOpNode extends exprNode {
         secondFactor.Unparse(0);
         //System.out.print(")");
     } // Unparse
-
-    void cg() {
-        firstFactor.cg();
-        if (!secondFactor.isNull()) {
-            secondFactor.cg();
-            /*
-             * Need to do
-             */
-        }
-    }
 
     private final exprNode firstFactor;
     private final exprNode secondFactor;
@@ -2028,10 +1632,7 @@ class factorNode extends exprNode {
     void checkTypes() {
         factor.checkTypes();
         pri.checkTypes();
-        if (pri.isNull()) {
-            type = factor.type;
-            kind = factor.kind;
-        }
+        if (pri.isNull()) {}
         else {
             mustBe(operatorCode == sym.PLUS
                 || operatorCode == sym.MINUS);
@@ -2045,20 +1646,10 @@ class factorNode extends exprNode {
                 typeMustBe(pri.type.val, Types.Integer,
                     error() + "RightOperand must be int or char type.");
             }
-            type = new Types(Types.Integer);
         }
+        type = new Types(Types.Integer);
         size = factor.size;
     } // checkTypes
-
-    void cg() {
-        factor.cg();
-        if (!pri.isNull()) {
-            pri.cg();
-            /*
-             * Need to do
-             */
-        }
-    }
 
     private final exprNode factor;
     private final exprNode pri;
@@ -2105,10 +1696,7 @@ class binaryOpNode extends exprNode {
     void checkTypes() {
         leftOperand.checkTypes();
         rightOperand.checkTypes();
-        if (rightOperand.isNull()) {
-            type = leftOperand.type;
-            kind = leftOperand.kind;
-        }
+        if (rightOperand.isNull()) {}
         else {
             mustBe(operatorCode == sym.SLASH
                 || operatorCode == sym.TIMES);
@@ -2122,20 +1710,10 @@ class binaryOpNode extends exprNode {
                 typeMustBe(rightOperand.type.val, Types.Integer,
                     error() + "RightOperand must be int or char type.");
             }
-            type = new Types(Types.Integer);
         }
+        type = new Types(Types.Integer);
         size = leftOperand.size;
     } // checkTypes
-
-    void cg() {
-        leftOperand.cg();
-        if (!rightOperand.isNull()) {
-            rightOperand.cg();
-            /*
-             * Need to do
-             */
-        }
-    }
 
 	private final exprNode leftOperand;
 	private final exprNode rightOperand;
@@ -2169,28 +1747,17 @@ class unaryOpNode extends exprNode {
 
     void checkTypes() {
         operand.checkTypes();
-        if (operatorCode == -1) {
-            type = operand.type;
-            kind = operand.kind;
-        }
-        else if (operatorCode == sym.NOT) {
+        type = new Types(Types.Boolean);
+        if (operatorCode == sym.NOT) {
             typeMustBe(operand.type.val, Types.Boolean,
                 error() + "Only bool values may be applied"
                 + " in logical operators.");
             if (operand.type.val != Types.Boolean) {
                 type = new Types(Types.Error);
             }
-            type = new Types(Types.Boolean);
         }
         size = operand.size;
     } // checkTypes
-
-    void cg() {
-        operand.cg();
-        /*
-         * Need to do
-         */
-    }
 
 	private final exprNode operand;
 	private final int operatorCode; // Token code of the operator
@@ -2220,14 +1787,6 @@ class castNode extends exprNode {
         }
         type = resultType.type;
     } // checkTypes
-
-    void cg() {
-        if ("boolTypeNode".equals(resultType.getClass().getName())) {
-            /*
-             * Need to finish
-             */
-        }
-    }
 
 	private final exprNode operand;
 	private final typeNode resultType;
@@ -2370,16 +1929,20 @@ class identNode extends exprNode {
     void checkTypes() {
         boolean isChangeTop = false;
         SymbolInfo id;
+        //mustBe(kind.val == Kinds.Var); // In CSX-lite all IDs should be vars!
         id = (SymbolInfo) st.localLookup(idname);
         if (id == null) {
             id = (SymbolInfo) st.globalLookup(idname);
         }
         if (id == null) {
-          System.out.println(error() + idname + " is not declared.");
+          System.out.println(error() + " is not declared.");
+// grader: print idname.  -1
           typeErrors++;
           type = new Types(Types.Error);
         } else {
-            while (id != null && "callNode".equals(this.parentNode) && id.kind.val != Kinds.Method) {
+            while (id != null && this.parentNode == "callNode" && id.kind.val != Kinds.Method) {
+// grader: don't use == to compare strings!  That's pointer comparison.  -1
+            //while (id != null && id.kind.val != Kinds.Method) {
                 st.changeTop();
                 id = (SymbolInfo) st.globalLookup(idname);
                 isChangeTop = true;
@@ -2387,33 +1950,20 @@ class identNode extends exprNode {
             if (isChangeTop) {
                 st.restoreTop();
             }
-            if (id == null) {
-                System.out.println(error() + idname + " is not declared.");
-                typeErrors++;
-                type = new Types(Types.Error);
-            } else {
+            if (id != null) {
+// grader: more readable to put positive case first.  -0
                 type = id.type;
                 kind = id.kind;
                 size = id.size;
                 idinfo = id; // Save ptr to correct symbol table entry
+            } else {
+                System.out.println(error() + idname + " is not declared.");
+                typeErrors++;
+                type = new Types(Types.Error);
             }
         } // id != null
         //size = id.size;
     } // checkTypes
-    void cg() {
-      System.out.println("test");
-       if (this.idinfo.varIndex != -1) {
-            gen("iload",this.idinfo.varIndex);
-       } else {
-            if (this.idinfo.type.val == Types.Integer)
-               gen("getstatic",this.idinfo.fieldInfo, "I");
-            else if (this.idinfo.type.val == Types.Character)
-               gen("getstatic",this.idinfo.fieldInfo, "C");
-            else if (this.idinfo.type.val == Types.Boolean)
-               gen("getstatic",this.idinfo.fieldInfo, "Z");
-       }
-    }
-
 
 	public String idname;
     public SymbolInfo idinfo; // symbol table entry for this ident
@@ -2432,7 +1982,9 @@ class nameNode extends exprNode {
 
 	void Unparse(int indent) {
       varName.Unparse(0); // Subscripts not allowed in CSX Lite
-      if (subscriptVal.isNull() != true) {
+      if (subscriptVal.isNull()) {}
+// grader: avoid empty branches of "if".  -0
+      else {
         System.out.print("[");
         subscriptVal.Unparse(0);
         System.out.print("]");
@@ -2442,19 +1994,22 @@ class nameNode extends exprNode {
     void checkTypes() {
         varName.checkTypes();
         subscriptVal.checkTypes();
-        if (!subscriptVal.isNull() &&
-            subscriptVal.type.val != Types.Integer 
+        if (subscriptVal.isNull() != true) {
+            if (subscriptVal.type.val != Types.Integer 
                 && subscriptVal.type.val != Types.Character) {
+// grader: These nested "if"s can be combined. -0
                     System.out.println(error() + "Only int or char type"
                         + " may be used to index arrays.");
                     typeErrors++;
                     type = new Types(Types.Error);
+             }
         }
         if (type.val != Types.Error) {
             type = varName.type;
             kind = varName.kind;
         }
-        if (!subscriptVal.isNull()) {
+        if (subscriptVal.isNull() != true) {
+// grader: silly.  Never compare against true or false. -1
             kind = new Kinds(Kinds.Var);
         }
         size = varName.size;
@@ -2464,50 +2019,6 @@ class nameNode extends exprNode {
     identNode returnVarName() {
       return varName;
     } // returnVarName
-    exprNode returnSub() {
-      return subscriptVal;
-    }
-
-    void cg() {
-      if (subscriptVal.isNull()) {
-          if (varName.idinfo.varIndex != -1) {
-            if (varName.kind.val == Kinds.Array || varName.kind.val == Kinds.ArrayParm) {
-              gen("aload",varName.idinfo.varIndex);
-              if (varName.type.val == Types.Integer)
-                gen("invokestatic","CSXLib/cloneIntArray([I)[I");
-              else if(varName.type.val == Types.Character)
-                gen("invokestatic","CSXLib/cloneCharArray([C)[C");
-              else if(varName.type.val == Types.Boolean)
-                gen("invokestatic","CSXLib/cloneBoolArray([Z)[Z");
-            } else {
-              if ("target".equals(this.parentNode) == false)
-                gen("iload",varName.idinfo.varIndex);
-            }
-          } else {
-            /*
-             * Need to solve field: a[1] = 9;
-             */
-              if (varName.idinfo.type.val == Types.Integer)
-                gen("getstatic",varName.idinfo.fieldInfo, "I");
-              else if (varName.idinfo.type.val == Types.Character)
-                gen("getstatic",varName.idinfo.fieldInfo, "C");
-              else if (varName.idinfo.type.val == Types.Boolean)
-                gen("getstatic",varName.idinfo.fieldInfo, "Z");
-          }
-      } else {
-        gen("aload",varName.idinfo.varIndex);
-        subscriptVal.cg();
-        if ("target".equals(this.parentNode)){}
-        else {
-          if (type.val == Types.Integer)
-            gen("iaload");
-          else if (type.val == Types.Character)
-            gen("caload");
-          else if (type.val == Types.Boolean)
-            gen("baload");
-        }
-        }
-    }
 
 
     static nullNameNode NULL = new nullNameNode(); 
@@ -2521,7 +2032,6 @@ class nullNameNode extends nameNode {
    	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
-    void cg() {}
 // grader: best to document empty methods.  -0
 }
 
@@ -2535,6 +2045,12 @@ class strLitNode extends exprNode {
       size = strval.length();
     } // strLitNode
 
+    /*strLitNode(String val, int line, int col) {
+      super(line, col, new Types(Types.String),
+          new Kinds(Kinds.Value));
+      strval = val;
+    } // strLitNode */
+
     void Unparse(int indent) {
       System.out.print(strval);
     }
@@ -2543,11 +2059,6 @@ class strLitNode extends exprNode {
         // All strLits are automatically type-correct
     } // checkTypes
 
-    void cg() {
-      gen("ldc",fullstr);
-    }
-
-    private identNode array;
     private final String fullstr;
 // grader: you never use fullstr.  -0
     private final String strval;
@@ -2572,10 +2083,6 @@ class intLitNode extends exprNode {
         // All intLits are automatically type-correct
     } // checkTypes
 
-    void cg() {
-        gen("ldc",intval);
-    }
-
 	private final int intval;
 } // class intLitNode 
 
@@ -2594,10 +2101,6 @@ class charLitNode extends exprNode {
         // All charLits are automatically type-correct
     } // checkTypes
 
-    void cg() {
-        gen("ldc",charval.charAt(1)-'A'+65);
-    }
-
 	private final String charval;
 } // class charLitNode 
 
@@ -2614,10 +2117,6 @@ class trueNode extends exprNode {
     void checkTypes() {
         // All trueNodes are automatically type-correct
     } // checkTypes
-
-    void cg() {
-        gen("iconst_1");
-    }
 } // class trueNode 
 
 class falseNode extends exprNode {
@@ -2633,10 +2132,6 @@ class falseNode extends exprNode {
     void checkTypes() {
         // All falseNodes are automatically type-correct
     } // checkTypes
-
-    void cg() {
-        gen("iconst_0");
-    }
 } // class falseNode 
 
 class exprUnitNode extends exprNode {
@@ -2655,10 +2150,6 @@ class exprUnitNode extends exprNode {
         expr.checkTypes();
         type = expr.type;
     } // checkTypes
-
-    void cg() {
-        expr.cg();
-    }
 
 	private final exprNode expr;
 } // class exprUnitNode 

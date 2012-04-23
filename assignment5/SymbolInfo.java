@@ -18,6 +18,9 @@ class SymbolInfo extends Symb {
 
  public int size;
 
+ public int headOfLoop;
+ public int loopExit;
+
  public static int hasWrittenMain = 0;
 
  public static int hasStoreField = 0;
@@ -25,6 +28,8 @@ class SymbolInfo extends Symb {
  public static String className;
 
  public String fieldInfo;
+
+ public String methodSigna;
 
  public List <Types>listType = new LinkedList<Types>();
 

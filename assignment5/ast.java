@@ -210,12 +210,12 @@ class classNode extends ASTNode {
             System.out.println(error() + "Not declare main method in the class.");
             typeErrors++;
         }
-    }
+    } // checkTypes
 
     boolean isTypeCorrect() {
         checkTypes();
         return (typeErrors == 0);
-    }
+    } // isTypeCorrect
 
     void Unparse(int indent) {
       System.out.print(linenum + ":" + " class ");
@@ -223,13 +223,13 @@ class classNode extends ASTNode {
       System.out.println(" {");
       members.Unparse(0);
       System.out.println(linenum + ":" + " } EOF");
-    }
+    } // Unparse
 
     boolean codegen(PrintStream asmfile) {
         afile = asmfile;
         cg();
         return (cgErrors == 0);
-    }
+    } // codegen
 
     void cg() {
         SymbolInfo.className = className.idname;
@@ -237,7 +237,7 @@ class classNode extends ASTNode {
         gen(".super","java/lang/Object\n");
 
         members.cg();
-    }
+    } // cg
 
 	private final identNode className;
 	private final memberDeclsNode members;
@@ -285,12 +285,12 @@ class memberDeclsNode extends ASTNode {
             gen(".end method\n");
             SymbolInfo.hasWrittenMain = 1;
             /*
-             * Need to store initValue
+             * Need to do dostore initValue
              */
         }
         moreMembers.cg();
         methods.cg();
-    }
+    } // cg
 
     static nullMemberDeclsNode NULL = new nullMemberDeclsNode();
 	private declNode fields;
@@ -299,7 +299,7 @@ class memberDeclsNode extends ASTNode {
 } // class memberDeclsNode
 
 class nullMemberDeclsNode extends memberDeclsNode {
-  nullMemberDeclsNode() {}
+  nullMemberDeclsNode() {super();}
   boolean isNull() {return true;}
   void Unparse(int indent) {}
   void checkTypes() {}
@@ -319,19 +319,19 @@ class fieldDeclsNode extends ASTNode {
     void Unparse(int indent) {
       thisField.Unparse(indent);
       moreFields.Unparse(indent);
-    }
+    } // Unparse
 
     void checkTypes() {
         thisField.parentNode = this.parentNode;
         moreFields.parentNode = this.parentNode;
         thisField.checkTypes();
         moreFields.checkTypes();
-    }
+    } // checkTypes
 
     void cg() {
         thisField.cg();
         moreFields.cg();
-    }
+    } // cg
 
 	static nullFieldDeclsNode NULL = new nullFieldDeclsNode();
 	private declNode thisField;
@@ -339,7 +339,7 @@ class fieldDeclsNode extends ASTNode {
 } // class fieldDeclsNode
 
 class nullFieldDeclsNode extends fieldDeclsNode {
-	nullFieldDeclsNode() {}
+	nullFieldDeclsNode() {super();}
 	boolean isNull() {
 		return true;
 	}
@@ -360,7 +360,7 @@ abstract class declNode extends ASTNode {
 } // class declNode
 
 class nullDeclNode extends declNode {
-    nullDeclNode() {}
+    nullDeclNode() {super();}
     boolean isNull() {return true;}
     void Unparse(int ident) {}
     void checkTypes() {}
@@ -374,7 +374,7 @@ class varDeclNode extends declNode {
 		varType = t;
 		initValue = e;
 	}
-    
+
     void Unparse(int indent) {
       System.out.print(linenum + ":");
       genIndent(indent+1);
@@ -387,8 +387,8 @@ class varDeclNode extends declNode {
         initValue.Unparse(0);
       }
       System.out.println(";");
-    }
-    
+    } // Unparse
+
     void checkTypes() {
         SymbolInfo id;
         id = (SymbolInfo) st.localLookup(varName.idname);
@@ -460,7 +460,7 @@ class constDeclNode extends declNode {
         System.out.print(" = ");
         constValue.Unparse(0);
         System.out.println(";");
-    }
+    } // Unparse
 
     void checkTypes() {
         constValue.checkTypes();
@@ -498,7 +498,7 @@ class constDeclNode extends declNode {
           else if (constValue.type.val == Types.String)
             gen(".field static",constName.idname,"S");
           /*
-           * Need to check if "S" are correct.
+           * Need to do do check if "S" are correct.
            */
         }
         else {
@@ -509,12 +509,12 @@ class constDeclNode extends declNode {
         if ("class".equals(this.parentNode)) {
             //gen("putstatic",constName.idinfo.fieldInfo,varType.returnType());
             /*
-             * Need to do store value to field
+             * Need to do do store value to field
              */
         } else {
             gen("istore",constName.idinfo.varIndex);
         }
-    }
+    } // cg
 
 	private final identNode constName;
 	private final exprNode constValue;
@@ -597,7 +597,7 @@ abstract class typeNode extends ASTNode {
 } // class typeNode
 
 class nullTypeNode extends typeNode {
-	nullTypeNode() {}
+	nullTypeNode() {super();}
 	boolean isNull() {
 		return true;
 	}
@@ -690,19 +690,17 @@ class optionalSemiNode extends ASTNode {
         super(line, col);
         semisym = semi;
     }
-
     void Unparse(int indent) {
         if (semisym == sym.SEMI) {
           System.out.print(";");
         }
     }
-
     private int semisym;
     static nullOptionalSemiNode NULL = new nullOptionalSemiNode();
 } // optionalSemiNode class
 
 class nullOptionalSemiNode extends optionalSemiNode {
-  nullOptionalSemiNode() {};
+  nullOptionalSemiNode() {super();};
   boolean isNull() {return true;}
   void Unparse(int indent) {}
 } // nullOptionalSemiNode class
@@ -739,7 +737,7 @@ class methodDeclsNode extends ASTNode {
 } // class methodDeclsNode 
 
 class nullMethodDeclsNode extends methodDeclsNode {
-	nullMethodDeclsNode() {}
+	nullMethodDeclsNode() {super();}
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
@@ -829,7 +827,8 @@ class methodDeclNode extends ASTNode {
         numberOfLocals = 0;
         args.cg();
         if (args.isNull()) {
-            gen(".method","public static",name.idname+"()"+returnType.returnType());
+            name.idinfo.methodSigna = name.idname+"()"+returnType.returnType();
+            gen(".method","public static",name.idinfo.methodSigna);
         }
         else {
             // Add args within ()
@@ -843,10 +842,12 @@ class methodDeclNode extends ASTNode {
                 calArgs = calArgs.returnMoreDecls();
             }
             argsType += calArgs.returnThisDecl().returnArgsType();
-            gen(".method","public static",name.idname+"("+argsType+")"+returnType.returnType());
+            name.idinfo.methodSigna = name.idname+"("+argsType+")"+returnType.returnType();
+            gen(".method","public static",name.idinfo.methodSigna);
         }
         decls.cg();
         stmts.cg();
+        gen("return");
         if (numberOfLocals > 0) {
             gen(".limit","locals",numberOfLocals);
         }
@@ -854,7 +855,6 @@ class methodDeclNode extends ASTNode {
         gen(".end","method\n");
         numberOfLocals = storeNumOfLocals;
     } // cg
-
 
     private String argsType;
     private argDeclsNode calArgs;
@@ -880,7 +880,7 @@ abstract class argDeclNode extends ASTNode {
 }
 
 class argDeclsNode extends ASTNode {
-	argDeclsNode() {}
+	argDeclsNode() {super();}
 	argDeclsNode(argDeclNode arg, argDeclsNode args,
 			int line, int col) {
 		super(line, col);
@@ -918,7 +918,7 @@ class argDeclsNode extends ASTNode {
 } // class argDeclsNode 
 
 class nullArgDeclsNode extends argDeclsNode {
-	nullArgDeclsNode() {}
+	nullArgDeclsNode() {super();}
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
@@ -987,7 +987,7 @@ class valArgDeclNode extends argDeclNode {
 		argName = id;
 		argType = t;
 	}
-    
+
     void Unparse(int indent) {
         argType.Unparse(0);
         System.out.print(" ");
@@ -1048,7 +1048,7 @@ abstract class stmtNode extends ASTNode {
 }
 
 class nullStmtNode extends stmtNode {
-	nullStmtNode() {}
+	nullStmtNode() {super();}
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
@@ -1056,12 +1056,12 @@ class nullStmtNode extends stmtNode {
 } // class nullStmtNode 
 
 class stmtsNode extends ASTNode {
+	stmtsNode() {super();}
 	stmtsNode(stmtNode stmt, stmtsNode stmts, int line, int col) {
 		super(line, col);
 		thisStmt = stmt;
 		moreStmts = stmts;
 	}
-	stmtsNode() {}
 
     void findClass(String str) {
         thisStmt.findClass(str);
@@ -1089,7 +1089,7 @@ class stmtsNode extends ASTNode {
 } // class stmtsNode 
 
 class nullStmtsNode extends stmtsNode {
-	nullStmtsNode() {}
+	nullStmtsNode() {super();}
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
@@ -1111,7 +1111,7 @@ class asgNode extends stmtNode {
 		System.out.print(" = ");
 		source.Unparse(0);
 		System.out.println(";");
-	}
+	} // Unparse
 
     void checkTypes() {
         target.checkTypes();
@@ -1150,7 +1150,7 @@ class asgNode extends stmtNode {
         gen("; begin asg operation");
         target.cg();
           /*
-           * Need to check array length
+           * Need to do do check array length
            */
         source.cg();
         if ("strLitNode".equals(source.getClass().getName()))
@@ -1183,8 +1183,8 @@ class elseNode extends stmtNode {
       super(line,col);
       elsestmt = s;
     } // elseNode
-    elseNode() {}
-        
+    elseNode() {super();}
+
     void findClass(String str) {
         elsestmt.findClass(str);
     } // findClass
@@ -1201,16 +1201,21 @@ class elseNode extends stmtNode {
         elsestmt.checkTypes();
     } // checkTypes
 
+    void cg() {
+        elsestmt.cg();
+    } // cg
+
     static nullElseNode NULL = new nullElseNode();
     private stmtNode elsestmt;
 } // class elseNode
 
 class nullElseNode extends elseNode {
-    nullElseNode() {}
+    nullElseNode() {super();}
     boolean  isNull() {return true;}
     void findClass(String str) {}
     void Unparse(int indent) {}
     void checkTypes() {}
+    void cg() {}
 } // class nullElseNode
 
 class ifThenNode extends stmtNode {
@@ -1220,7 +1225,7 @@ class ifThenNode extends stmtNode {
 		thenPart = s1;
 		elsePart = el;
 	} // ifThenNode
-        
+
     void findClass(String str) {
         thenPart.findClass(str);
         elsePart.findClass(str);
@@ -1251,6 +1256,21 @@ class ifThenNode extends stmtNode {
         elsePart.checkTypes();
     } // checkTypes
 
+    void cg() {
+        gen("; if statement");
+        condition.cg();
+        gen("ifeq",buildlabel(++labelCnt));
+        thisLabelCnt = labelCnt;
+        labelCnt += 2;
+        thenPart.cg();
+        gen("goto",buildlabel(thisLabelCnt+1));
+        gen("; else statement");
+        genlab(buildlabel(thisLabelCnt));
+        elsePart.cg();
+        genlab(buildlabel(thisLabelCnt+1));
+    } // cg
+
+    private int thisLabelCnt;
 	private final exprNode condition;
 	private final stmtNode thenPart;
 	private final elseNode elsePart;
@@ -1287,7 +1307,6 @@ class whileNode extends stmtNode {
         loopBody.brotherNode = "while";
         loopBody.parentNode = this.parentNode;
         if (!label.isNull()) {
-          
             SymbolInfo id;
             id = (SymbolInfo) st.localLookup(label.idname);
             if (id == null) {
@@ -1332,6 +1351,24 @@ class whileNode extends stmtNode {
         loopBody.checkTypes();
     } // checkTypes
 
+    void cg() {
+      gen("; while statement");
+      labelCnt++;
+      thisLabelCnt = labelCnt;
+      if (!label.isNull()) {
+          label.idinfo.headOfLoop = thisLabelCnt;
+          label.idinfo.loopExit = thisLabelCnt+1;
+      }
+      genlab(buildlabel(thisLabelCnt));
+      labelCnt += 2;
+      condition.cg();
+      gen("ifeq",buildlabel(thisLabelCnt+1));
+      loopBody.cg();
+      gen("goto",buildlabel(thisLabelCnt));
+      genlab(buildlabel(thisLabelCnt+1));
+    } // cg
+
+    private int thisLabelCnt;
 	private final identNode label;
 	private final exprNode condition;
 	private final stmtNode loopBody;
@@ -1362,7 +1399,7 @@ class readListNode extends stmtNode {
 } // class readListNode 
 
 class readNode extends stmtNode {
-	readNode() {}
+	readNode() {super();}
 	readNode(nameNode n, readNode rn, int line, int col) {
 		 super(line, col);
 		 targetVar = n;
@@ -1388,6 +1425,7 @@ class readNode extends stmtNode {
     } // checkTypes
 
     void cg() {
+        gen("; read operation");
         if (targetVar.type.val == Types.Integer) {
             gen("invokestatic", "CSXLib/readInt()I");
         } else if (targetVar.type.val == Types.Character) {
@@ -1411,7 +1449,7 @@ class readNode extends stmtNode {
 } // class readNode 
 
 class nullReadNode extends readNode {
-	nullReadNode() {}
+	nullReadNode() {super();}
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
@@ -1444,7 +1482,7 @@ class printListNode extends stmtNode {
 } // class printListNode
 
 class printNode extends stmtNode {
-	printNode() {}
+	printNode() {super();}
 	printNode(exprNode val, printNode pn, int line, int col) {
 		super(line, col);
 		outputValue = val;
@@ -1489,9 +1527,6 @@ class printNode extends stmtNode {
             gen("invokestatic","CSXLib/printChar(C)V");
         } else if (outputValue.type.val == Types.Boolean) {
             gen("invokestatic","CSXLib/printBool(Z)V");
-            /*
-             * Need to check if it is Z
-             */
         } else if (outputValue.kind.val == Kinds.Array || 
             outputValue.kind.val == Kinds.ArrayParm) {
             gen("invokestatic","CSXLib/printCharArray([C)V");
@@ -1505,7 +1540,7 @@ class printNode extends stmtNode {
 } // class printNode 
 
 class nullPrintNode extends printNode {
-	nullPrintNode() {}
+	nullPrintNode() {super();}
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
@@ -1589,6 +1624,11 @@ class callNode extends stmtNode {
         }
     } // checkTypes
 
+    void cg() {
+      args.cg();
+      gen("invokestatic",SymbolInfo.className+"/"+methodName.idinfo.methodSigna);
+    } // cg
+
 	private final identNode methodName;
 	private final argsNode args;
 } // class callNode 
@@ -1627,7 +1667,7 @@ class returnNode extends stmtNode {
                     + " the function.");
             }
         }
-    }
+    } // checkTypes
 
     void cg() {
         if (returnVal.isNull()) {
@@ -1712,6 +1752,10 @@ class breakNode extends stmtNode {
         }
     } // checkTypes
 
+    void cg() {
+        gen("goto",buildlabel(label.idinfo.loopExit));
+    } // cg
+
 	private final identNode label;
 } // class breakNode 
 
@@ -1737,11 +1781,15 @@ class continueNode extends stmtNode {
         }
     } // checkTypes
 
+    void cg() {
+        gen("goto",buildlabel(label.idinfo.headOfLoop));
+    } // cg
+
 	private final identNode label;
 } // class continueNode 
 
 class argsNode extends ASTNode {
-	argsNode() {}
+	argsNode() {super();}
 	argsNode(exprNode e, argsNode a, int line, int col) {
 		super(line, col);
 		argVal = e;
@@ -1793,7 +1841,7 @@ class argsNode extends ASTNode {
 
 class nullArgsNode extends argsNode {
 	nullArgsNode() {
-		// empty constructor
+        super();
 	}
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
@@ -1823,7 +1871,7 @@ abstract class exprNode extends ASTNode {
 } // abstract class exprNode
 
 class nullExprNode extends exprNode {
-	nullExprNode() {}
+	nullExprNode() {super();}
 	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
@@ -1882,15 +1930,39 @@ class booleanOpNode extends exprNode {
      } // checkTypes
 
      void cg() {
-        term.cg();
-        if (!expr.isNull()) {
+        if (expr.isNull())
+          term.cg();
+        else {
+          term.cg();
+          if (operatorCode == sym.CAND) {
+            gen("ifeq",buildlabel(++labelCnt));
+            thisLabelCnt = labelCnt;
+            labelCnt += 2;
             expr.cg();
-            /*
-             * Need to do
-             */
+            gen("ifeq",buildlabel(thisLabelCnt));
+            gen("iconst_1");
+            gen("goto",buildlabel(++thisLabelCnt));
+            genlab(buildlabel(thisLabelCnt-1));
+            gen("iconst_0");
+            genlab(buildlabel(thisLabelCnt));
+          }
+          if (operatorCode == sym.COR) {
+            gen("ifne",buildlabel(++labelCnt));
+            thisLabelCnt = labelCnt;
+            labelCnt += 2;
+            expr.cg();
+            gen("ifeq",buildlabel(++thisLabelCnt));
+            genlab(buildlabel(thisLabelCnt-1));
+            gen("iconst_1");
+            gen("goto",buildlabel(++thisLabelCnt));
+            genlab(buildlabel(thisLabelCnt-1));
+            gen("iconst_0");
+            genlab(buildlabel(thisLabelCnt));
+          }
         }
-     }
+     } // cg
 
+    private int thisLabelCnt;
     private final exprNode expr;
     private final exprNode term;
     private final int operatorCode;
@@ -1973,11 +2045,57 @@ class relationOpNode extends exprNode {
         firstFactor.cg();
         if (!secondFactor.isNull()) {
             secondFactor.cg();
-            /*
-             * Need to do
-             */
+            gen("isub");
+            if (operatorCode == sym.LT) {
+              gen("iflt",buildlabel(++labelCnt));
+              gen("iconst_0");
+              gen("goto", buildlabel(++labelCnt));
+              genlab(buildlabel(labelCnt-1));
+              gen("iconst_1");
+              genlab(buildlabel(labelCnt));
+            }
+            if (operatorCode == sym.GT) {
+              gen("ifgt",buildlabel(++labelCnt));
+              gen("iconst_0");
+              gen("goto", buildlabel(++labelCnt));
+              genlab(buildlabel(labelCnt-1));
+              gen("iconst_1");
+              genlab(buildlabel(labelCnt));
+            }
+            if (operatorCode == sym.LEQ) {
+              gen("ifle",buildlabel(++labelCnt));
+              gen("iconst_0");
+              gen("goto", buildlabel(++labelCnt));
+              genlab(buildlabel(labelCnt-1));
+              gen("iconst_1");
+              genlab(buildlabel(labelCnt));
+            }
+            if (operatorCode == sym.GEQ) {
+              gen("ifge",buildlabel(++labelCnt));
+              gen("iconst_0");
+              gen("goto", buildlabel(++labelCnt));
+              genlab(buildlabel(labelCnt-1));
+              gen("iconst_1");
+              genlab(buildlabel(labelCnt));
+            }
+            if (operatorCode == sym.EQ) {
+              gen("ifeq",buildlabel(++labelCnt));
+              gen("iconst_0");
+              gen("goto", buildlabel(++labelCnt));
+              genlab(buildlabel(labelCnt-1));
+              gen("iconst_1");
+              genlab(buildlabel(labelCnt));
+            }
+            if (operatorCode == sym.NOTEQ) {
+              gen("ifne",buildlabel(++labelCnt));
+              gen("iconst_0");
+              gen("goto", buildlabel(++labelCnt));
+              genlab(buildlabel(labelCnt-1));
+              gen("iconst_1");
+              genlab(buildlabel(labelCnt));
+            }
         }
-    }
+    } // cg
 
     private final exprNode firstFactor;
     private final exprNode secondFactor;
@@ -1992,7 +2110,7 @@ class factorNode extends exprNode {
 		factor = e1;
 		pri = e2;
 	} // factorNode
-    
+
     static void printOp(int op) {
       switch (op) {
         case sym.PLUS:
@@ -2054,9 +2172,10 @@ class factorNode extends exprNode {
         factor.cg();
         if (!pri.isNull()) {
             pri.cg();
-            /*
-             * Need to do
-             */
+            if (operatorCode == sym.PLUS)
+              gen("iadd");
+            else
+              gen("isub");
         }
     }
 
@@ -2131,9 +2250,10 @@ class binaryOpNode extends exprNode {
         leftOperand.cg();
         if (!rightOperand.isNull()) {
             rightOperand.cg();
-            /*
-             * Need to do
-             */
+            if (operatorCode == sym.SLASH)
+              gen("idiv");
+            else
+              gen("imul");
         }
     }
 
@@ -2157,8 +2277,7 @@ class unaryOpNode extends exprNode {
           case -1:
             break;
           default:
-            throw new Error("printOp: case not found");
-// grader: don't throw raw exceptions. -1
+            break;
         }
     }
 
@@ -2187,10 +2306,16 @@ class unaryOpNode extends exprNode {
 
     void cg() {
         operand.cg();
-        /*
-         * Need to do
-         */
-    }
+        if (operatorCode == sym.NOT) {
+          gen("ifne",buildlabel(++labelCnt));
+          gen("iconst_1");
+          gen("goto",buildlabel(++labelCnt));
+          genlab(buildlabel(labelCnt-1));
+          gen("iconst_0");
+          genlab(buildlabel(labelCnt));
+        }
+
+    } // cg
 
 	private final exprNode operand;
 	private final int operatorCode; // Token code of the operator
@@ -2224,10 +2349,10 @@ class castNode extends exprNode {
     void cg() {
         if ("boolTypeNode".equals(resultType.getClass().getName())) {
             /*
-             * Need to finish
+             * Need to do do finish
              */
         }
-    }
+    } // cg
 
 	private final exprNode operand;
 	private final typeNode resultType;
@@ -2307,7 +2432,6 @@ class fctCallNode extends exprNode {
             while (iListKind.hasNext()) {
                 String listKind = iListKind.next().toString();
                 String parmListKind = iParmListKind.next().toString();
-// grader: parmListKind could be final, as could 17 other variables.  -0
                 if (listKind == "ScalarParm" && parmListKind == "Array") {
                     System.out.println(error() +"The kind of parameters doesn't match.");
                     System.out.println("\t\t " + "required: " + listKind);
@@ -2341,6 +2465,11 @@ class fctCallNode extends exprNode {
             }
         }
     } // checkTypes
+
+    void cg() {
+        methodArgs.cg();
+        gen("invokestatic",SymbolInfo.className+"/"+methodName.idinfo.methodSigna);
+    } // cg
 
 	private final identNode methodName;
 	private final argsNode methodArgs;
@@ -2400,6 +2529,7 @@ class identNode extends exprNode {
         } // id != null
         //size = id.size;
     } // checkTypes
+
     void cg() {
       System.out.println("test");
        if (this.idinfo.varIndex != -1) {
@@ -2412,8 +2542,7 @@ class identNode extends exprNode {
             else if (this.idinfo.type.val == Types.Boolean)
                gen("getstatic",this.idinfo.fieldInfo, "Z");
        }
-    }
-
+    } // cg
 
 	public String idname;
     public SymbolInfo idinfo; // symbol table entry for this ident
@@ -2460,7 +2589,6 @@ class nameNode extends exprNode {
         size = varName.size;
     } // checkTypes
 
-
     identNode returnVarName() {
       return varName;
     } // returnVarName
@@ -2480,12 +2608,12 @@ class nameNode extends exprNode {
               else if(varName.type.val == Types.Boolean)
                 gen("invokestatic","CSXLib/cloneBoolArray([Z)[Z");
             } else {
-              if ("target".equals(this.parentNode) == false)
+              if ("target".equals(this.parentNode) != true)
                 gen("iload",varName.idinfo.varIndex);
             }
           } else {
             /*
-             * Need to solve field: a[1] = 9;
+             * Need to do do solve field: a[1] = 9;
              */
               if (varName.idinfo.type.val == Types.Integer)
                 gen("getstatic",varName.idinfo.fieldInfo, "I");
@@ -2494,7 +2622,8 @@ class nameNode extends exprNode {
               else if (varName.idinfo.type.val == Types.Boolean)
                 gen("getstatic",varName.idinfo.fieldInfo, "Z");
           }
-      } else {
+      }
+      else {
         gen("aload",varName.idinfo.varIndex);
         subscriptVal.cg();
         if ("target".equals(this.parentNode)){}
@@ -2506,8 +2635,8 @@ class nameNode extends exprNode {
           else if (type.val == Types.Boolean)
             gen("baload");
         }
-        }
-    }
+      }
+    } // cg
 
 
     static nullNameNode NULL = new nullNameNode(); 
@@ -2516,17 +2645,14 @@ class nameNode extends exprNode {
 } // class nameNode 
 
 class nullNameNode extends nameNode {
-    nullNameNode() {}
-// grader: best to document empty constructors. -0
+    nullNameNode() {super();}
    	boolean   isNull() {return true;}
 	void Unparse(int indent) {}
     void checkTypes() {}
     void cg() {}
-// grader: best to document empty methods.  -0
 }
 
 class strLitNode extends exprNode {
-
     strLitNode(String fullstring, String stringval, int line, int col) {
       super(line, col, new Types(Types.String),
           new Kinds(Kinds.Value));
@@ -2537,7 +2663,7 @@ class strLitNode extends exprNode {
 
     void Unparse(int indent) {
       System.out.print(strval);
-    }
+    } // Unparse
 
     void checkTypes() {
         // All strLits are automatically type-correct
@@ -2545,11 +2671,10 @@ class strLitNode extends exprNode {
 
     void cg() {
       gen("ldc",fullstr);
-    }
+    } // cg
 
     private identNode array;
     private final String fullstr;
-// grader: you never use fullstr.  -0
     private final String strval;
 } // class strLitNode
 
@@ -2574,7 +2699,7 @@ class intLitNode extends exprNode {
 
     void cg() {
         gen("ldc",intval);
-    }
+    } // cg
 
 	private final int intval;
 } // class intLitNode 
@@ -2596,7 +2721,7 @@ class charLitNode extends exprNode {
 
     void cg() {
         gen("ldc",charval.charAt(1)-'A'+65);
-    }
+    } // cg
 
 	private final String charval;
 } // class charLitNode 
@@ -2617,7 +2742,7 @@ class trueNode extends exprNode {
 
     void cg() {
         gen("iconst_1");
-    }
+    } // cg
 } // class trueNode 
 
 class falseNode extends exprNode {
@@ -2636,7 +2761,7 @@ class falseNode extends exprNode {
 
     void cg() {
         gen("iconst_0");
-    }
+    } // cg
 } // class falseNode 
 
 class exprUnitNode extends exprNode {
@@ -2658,7 +2783,7 @@ class exprUnitNode extends exprNode {
 
     void cg() {
         expr.cg();
-    }
+    } // cg
 
 	private final exprNode expr;
 } // class exprUnitNode 

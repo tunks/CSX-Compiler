@@ -27,7 +27,7 @@ TESTDIR = .
 	javac $(JCFLAGS) $<
 
 .PHONY: all 
-all: P5.class Yylex.class parser.class CSX.class CSXLib.class
+all: P5.class Yylex.class parser.class CSXLib.class
 
 # don't use CUP 0.11a; I couldn't get it to work right.  -- Raphael 2/2011
 sym.java parser.java: lite.cup 
@@ -41,7 +41,7 @@ Scanner.class: Yylex.class Types.class
 SymbolInfo.class: Kinds.class
 ASTNode.class: ast.java sym.class SymbolTable.class SymbolInfo.class
 	javac $(JCFLAGS) ast.java
-P5.class: Yylex.class Scanner.class parser.class ASTNode.class CSX.class CSXLib.class
+P5.class: Yylex.class Scanner.class parser.class ASTNode.class CSXLib.class
 
 test: all
 	java $(JFLAGS) P5 $(TESTDIR)/test.csx

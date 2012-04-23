@@ -17,6 +17,8 @@ abstract class ASTNode {
 
     static int labelCnt = 0;       // Counter used to gen unique labels
 
+    static Map <identNode,exprNode>initValueOfField = new HashMap<identNode,exprNode>();
+
 	static void genIndent(int indent) {
 		for (int i = 1; i <= indent; i += 1) {
 			System.out.print("\t");
@@ -279,14 +281,63 @@ class memberDeclsNode extends ASTNode {
         if (moreMembers.fields == null) {
             gen(".method"," public static","main([Ljava/lang/String;)V");
             //System.out.println(fields.getClass().getName());
+            Iterator it = initValueOfField.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pairs = (Map.Entry)it.next();
+                if (((identNode)pairs.getKey()).kind.val == Kinds.Var) {
+                    ((exprNode)pairs.getValue()).cg();
+                    if (((identNode)pairs.getKey()).type.val == Types.Integer)
+                      gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"I");
+                    else if (((identNode)pairs.getKey()).type.val == Types.Character)
+                      gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"C");
+                    else
+                      gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"Z");
+                } else if (((identNode)pairs.getKey()).kind.val == Kinds.Array) {
+                    if (((identNode)pairs.getKey()).type.val == Types.String){ // const c = "ab"
+                        gen("ldc",((strLitNode)pairs.getValue()).size);
+                        gen("newarray","char");
+                        gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"[C");
+                        ((strLitNode)pairs.getValue()).cg();
+                        gen("invokestatic", "CSXLib/convertString(Ljava/lang/String;)[C");
+                        gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"[C");
+                    }
+                    else {
+                        ((intLitNode)pairs.getValue()).cg();
+                        if (((identNode)pairs.getKey()).type.val == Types.Integer) {
+                          gen("newarray","int");
+                          gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"[I");
+                        } else if (((identNode)pairs.getKey()).type.val == Types.Character) {
+                          gen("newarray","char");
+                          gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"[C");
+                        } else if (((identNode)pairs.getKey()).type.val == Types.String) {
+                          gen("newarray","char");
+                          gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"[C");
+                        }
+                        else {
+                         gen("newarray","boolean");
+                         gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"[Z");
+                        }
+                    }
+                } else if (((identNode)pairs.getKey()).kind.val == Kinds.Value) {
+                    ((exprNode)pairs.getValue()).cg();
+                    if (((identNode)pairs.getKey()).type.val == Types.Integer)
+                      gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"I");
+                    else if (((identNode)pairs.getKey()).type.val == Types.Character)
+                      gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"C");
+                    else if (((identNode)pairs.getKey()).type.val == Types.Boolean)
+                      gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"Z");
+                    else if (((identNode)pairs.getKey()).type.val == Types.String) {
+                      gen("invokestatic", "CSXLib/convertString(Ljava/lang/String;)[C");
+                      gen("putstatic",((identNode)pairs.getKey()).idinfo.fieldInfo,"[C");
+                    }
+                }
+                it.remove();
+            }
             gen("invokestatic",SymbolInfo.className+"/main()V"); // className /main()V
             gen("return");
             gen(".limit", "stack", 2);
             gen(".end method\n");
             SymbolInfo.hasWrittenMain = 1;
-            /*
-             * Need to do dostore initValue
-             */
         }
         moreMembers.cg();
         methods.cg();
@@ -396,6 +447,7 @@ class varDeclNode extends declNode {
             id = new SymbolInfo(varName.idname,
                 new Kinds(Kinds.Var), varType.type);
             varName.type = varType.type;
+            varName.kind = id.kind;
             try {
                 st.insert(id);
             } catch (DuplicateException d) {
@@ -431,10 +483,12 @@ class varDeclNode extends declNode {
               numberOfLocals++;
           }
         if (!initValue.isNull()) {
-            initValue.cg();
             if ("class".equals(this.parentNode)) {
-                gen("putstatic",varName.idinfo.fieldInfo,varType.returnType());
+                initValueOfField.put(varName, initValue);
+                //initValue.cg();
+                //gen("putstatic",varName.idinfo.fieldInfo,varType.returnType());
             } else {
+                initValue.cg();
                 gen("istore",varName.idinfo.varIndex);
             }
         }
@@ -467,9 +521,16 @@ class constDeclNode extends declNode {
         SymbolInfo id;
         id = (SymbolInfo) st.localLookup(constName.idname);
         if (id == null) {
-            id = new SymbolInfo(constName.idname,
-                new Kinds(Kinds.Value), constValue.type);
+            if ("strLitNode".equals(constValue.getClass().getName())) {
+                id = new SymbolInfo(constName.idname,
+                    new Kinds(Kinds.Array), new Types(Types.Character));
+            }
+            else {
+                id = new SymbolInfo(constName.idname,
+                    new Kinds(Kinds.Value), constValue.type);
+            }
             constName.type = constValue.type;
+            constName.kind = id.kind;
             try {
                 st.insert(id);
             } catch (DuplicateException d) {
@@ -496,22 +557,13 @@ class constDeclNode extends declNode {
           else if (constValue.type.val == Types.Character)
             gen(".field static",constName.idname,"C");
           else if (constValue.type.val == Types.String)
-            gen(".field static",constName.idname,"S");
-          /*
-           * Need to do do check if "S" are correct.
-           */
+            gen(".field static",constName.idname,"[C");
+          initValueOfField.put(constName, constValue);
         }
         else {
             constName.idinfo.varIndex = numberOfLocals;
             numberOfLocals++;
-        }
-        constValue.cg();
-        if ("class".equals(this.parentNode)) {
-            //gen("putstatic",constName.idinfo.fieldInfo,varType.returnType());
-            /*
-             * Need to do do store value to field
-             */
-        } else {
+            constValue.cg();
             gen("istore",constName.idinfo.varIndex);
         }
     } // cg
@@ -548,6 +600,7 @@ class arrayDeclNode extends declNode {
                 new Kinds(Kinds.Array), elementType.type);
             arrayName.type = elementType.type;
             id.size = size;
+            arrayName.kind = id.kind;
             try {
                 st.insert(id);
             } catch (DuplicateException d) {
@@ -569,11 +622,18 @@ class arrayDeclNode extends declNode {
     } //checkTypes
 
     void cg() {
+      if ("class".equals(this.parentNode)) {
+         arrayName.idinfo.varIndex = -1;
+         arrayName.idinfo.fieldInfo = SymbolInfo.className+"/"+arrayName.idname;
+         gen(".field static",arrayName.idname,"["+elementType.returnType());
+         initValueOfField.put(arrayName, arraySize);
+      } else {
          arrayName.idinfo.varIndex = numberOfLocals;
          numberOfLocals++;
          arraySize.cg();
          gen("newarray", elementType.returnFullType());
          gen("astore", arrayName.idinfo.varIndex);
+      }
     } // cg
 
 	private final identNode arrayName;
@@ -1147,19 +1207,40 @@ class asgNode extends stmtNode {
 
     void cg() {
         target.parentNode = "target";
-        gen("; begin asg operation");
-        target.cg();
-          /*
-           * Need to do do check array length
-           */
-        source.cg();
-        if ("strLitNode".equals(source.getClass().getName()))
+        source.parentNode = "source";
+        gen("; begin assign operation");
+        if (target.returnVarName().idinfo.varIndex == -1 && !((target.kind.val
+              == Kinds.Var)&&((target.returnVarName().idinfo.kind.val == Kinds.Array)
+              ||(target.returnVarName().idinfo.kind.val == Kinds.ArrayParm)))) {
+          source.cg();
+          sourceFirstCg = 1;
+          if ("strLitNode".equals(source.getClass().getName()))
             gen("invokestatic", "CSXLib/convertString(Ljava/lang/String;)[C");
+              }
+        target.cg();
+        if (sourceFirstCg == 0) {
+          source.cg();
+          if ("strLitNode".equals(source.getClass().getName()))
+            gen("invokestatic", "CSXLib/convertString(Ljava/lang/String;)[C");
+        }
+
+        // Check array length
+        if (target.kind.val==Kinds.ArrayParm||source.kind.val == Kinds.ArrayParm) {
+          if (target.type.val == Types.Integer)
+            gen("invokestatic", "CSXLib/checkIntArrayLength([I[I)[I");
+          else if (target.type.val == Types.Character)
+            gen("invokestatic", "CSXLib/checkCharArrayLength([C[C)[C");
+          else if (target.type.val == Types.Boolean)
+            gen("invokestatic", "CSXLib/checkBoolArrayLength([Z[Z)[Z");
+        }
+
 
         if (target.returnVarName().idinfo.kind.val == Kinds.Array ||
             target.returnVarName().idinfo.kind.val == Kinds.ArrayParm) {
-            if (target.returnSub().isNull())
+            if (target.returnSub().isNull()) {
+              if (target.returnVarName().idinfo.varIndex != -1) 
                gen("astore", target.returnVarName().idinfo.varIndex);
+            }
             else {
               if (target.returnVarName().idinfo.type.val == Types.Integer)
                 gen("iastore");
@@ -1169,11 +1250,12 @@ class asgNode extends stmtNode {
                 gen("bastore");
             }
         }
-        else {
+        else if(target.returnVarName().idinfo.varIndex != -1){
             gen("istore", target.returnVarName().idinfo.varIndex);
         }
     } // cg
 
+    private int sourceFirstCg = 0;
 	private final nameNode target;
 	private final exprNode source;
 } // class asgNode 
@@ -1716,7 +1798,6 @@ class blockNode extends stmtNode {
             st.closeScope();
         } catch (EmptySTException e) {
             /* can't happen */
-// grader: then put in a bug warning. -0
         }
     } // checkTypes
 
@@ -2347,10 +2428,30 @@ class castNode extends exprNode {
     } // checkTypes
 
     void cg() {
+        operand.cg();
         if ("boolTypeNode".equals(resultType.getClass().getName())) {
-            /*
-             * Need to do do finish
-             */
+          gen("ifne",buildlabel(++labelCnt));
+          gen("iconst_0");
+          gen("goto",buildlabel(++labelCnt));
+          genlab(buildlabel(labelCnt-1));
+          gen("iconst_1");
+          genlab(buildlabel(labelCnt));
+        } else if ("charTypeNode".equals(resultType.getClass().getName())) {
+            if (operand.type.val == Types.Integer) {
+              /*gen("dup");
+              gen("ldc",1000000);
+              gen("isub");
+              gen("ifle",buildlabel(++labelCnt));
+              gen("pop");
+              gen("dup");
+              gen("ldc",1000000);
+              gen("idiv");
+              gen("ldc",1000000);
+              gen("imul");
+              gen("isub");
+              genlab(buildlabel(labelCnt));*/
+              gen("i2c");
+            }
         }
     } // cg
 
@@ -2601,39 +2702,87 @@ class nameNode extends exprNode {
           if (varName.idinfo.varIndex != -1) {
             if (varName.kind.val == Kinds.Array || varName.kind.val == Kinds.ArrayParm) {
               gen("aload",varName.idinfo.varIndex);
-              if (varName.type.val == Types.Integer)
-                gen("invokestatic","CSXLib/cloneIntArray([I)[I");
-              else if(varName.type.val == Types.Character)
-                gen("invokestatic","CSXLib/cloneCharArray([C)[C");
-              else if(varName.type.val == Types.Boolean)
-                gen("invokestatic","CSXLib/cloneBoolArray([Z)[Z");
+              if ("source".equals(this.parentNode)) {
+                if (varName.type.val == Types.Integer)
+                    gen("invokestatic","CSXLib/cloneIntArray([I)[I");
+                else if(varName.type.val == Types.Character)
+                    gen("invokestatic","CSXLib/cloneCharArray([C)[C");
+                else if(varName.type.val == Types.Boolean)
+                    gen("invokestatic","CSXLib/cloneBoolArray([Z)[Z");
+              }
             } else {
               if ("target".equals(this.parentNode) != true)
                 gen("iload",varName.idinfo.varIndex);
             }
           } else {
-            /*
-             * Need to do do solve field: a[1] = 9;
-             */
-              if (varName.idinfo.type.val == Types.Integer)
-                gen("getstatic",varName.idinfo.fieldInfo, "I");
-              else if (varName.idinfo.type.val == Types.Character)
-                gen("getstatic",varName.idinfo.fieldInfo, "C");
-              else if (varName.idinfo.type.val == Types.Boolean)
-                gen("getstatic",varName.idinfo.fieldInfo, "Z");
+              if ("target".equals(this.parentNode)) {
+                if (varName.idinfo.kind.val == Kinds.Array ||
+                    varName.idinfo.kind.val == Kinds.ArrayParm) {
+                    if (varName.idinfo.type.val == Types.Integer)
+                        gen("putstatic",varName.idinfo.fieldInfo, "[I");
+                    else if (varName.idinfo.type.val == Types.Character)
+                        gen("putstatic",varName.idinfo.fieldInfo, "[C");
+                    else if (varName.idinfo.type.val == Types.Boolean)
+                        gen("putstatic",varName.idinfo.fieldInfo, "[Z");
+                    }
+                else {
+                    if (varName.idinfo.type.val == Types.Integer)
+                        gen("putstatic",varName.idinfo.fieldInfo, "I");
+                    else if (varName.idinfo.type.val == Types.Character)
+                        gen("putstatic",varName.idinfo.fieldInfo, "C");
+                    else if (varName.idinfo.type.val == Types.Boolean)
+                        gen("putstatic",varName.idinfo.fieldInfo, "Z");
+                }
+              }
+              else {
+                if (varName.idinfo.kind.val == Kinds.Array ||
+                    varName.idinfo.kind.val == Kinds.ArrayParm) {
+                    if (varName.idinfo.type.val == Types.Integer)
+                        gen("getstatic",varName.idinfo.fieldInfo, "[I");
+                    else if (varName.idinfo.type.val == Types.Character)
+                        gen("getstatic",varName.idinfo.fieldInfo, "[C");
+                    else if (varName.idinfo.type.val == Types.Boolean)
+                        gen("getstatic",varName.idinfo.fieldInfo, "[Z");
+                    }
+                else {
+                    if (varName.idinfo.type.val == Types.Integer)
+                        gen("getstatic",varName.idinfo.fieldInfo, "I");
+                    else if (varName.idinfo.type.val == Types.Character)
+                        gen("getstatic",varName.idinfo.fieldInfo, "C");
+                    else if (varName.idinfo.type.val == Types.Boolean)
+                        gen("getstatic",varName.idinfo.fieldInfo, "Z");
+                }
+              }
           }
-      }
-      else {
-        gen("aload",varName.idinfo.varIndex);
-        subscriptVal.cg();
-        if ("target".equals(this.parentNode)){}
-        else {
-          if (type.val == Types.Integer)
-            gen("iaload");
-          else if (type.val == Types.Character)
-            gen("caload");
-          else if (type.val == Types.Boolean)
-            gen("baload");
+      } else { // subscriptVal.isNull
+        if (varName.idinfo.varIndex != -1) {
+            gen("aload",varName.idinfo.varIndex);
+            subscriptVal.cg();
+            if ("target".equals(this.parentNode)){}
+            else {
+              if (type.val == Types.Integer)
+                gen("iaload");
+              else if (type.val == Types.Character)
+                gen("caload");
+              else if (type.val == Types.Boolean)
+                gen("baload");
+            }
+        } else {
+            if (varName.idinfo.type.val == Types.Integer)
+               gen("getstatic",varName.idinfo.fieldInfo, "[I");
+            else if (varName.idinfo.type.val == Types.Character)
+               gen("getstatic",varName.idinfo.fieldInfo, "[C");
+            else if (varName.idinfo.type.val == Types.Boolean)
+               gen("getstatic",varName.idinfo.fieldInfo, "[Z");
+            subscriptVal.cg();
+            if ("target".equals(this.parentNode) != true) {
+              if (type.val == Types.Integer)
+                gen("iaload");
+              else if (type.val == Types.Character)
+                gen("caload");
+              else if (type.val == Types.Boolean)
+                gen("baload");
+            }
         }
       }
     } // cg

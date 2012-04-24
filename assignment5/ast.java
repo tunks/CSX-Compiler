@@ -17,7 +17,7 @@ abstract class ASTNode {
 
     static int labelCnt = 0;       // Counter used to gen unique labels
 
-    static Map <identNode,exprNode>initValueOfField = new HashMap<identNode,exprNode>();
+    static Map<identNode,exprNode>initValueOfField=new HashMap<identNode,exprNode>();
 
 	static void genIndent(int indent) {
 		for (int i = 1; i <= indent; i += 1) {
@@ -240,6 +240,10 @@ class classNode extends ASTNode {
 
         members.cg();
     } // cg
+
+    String returnClassName() {
+        return className.idname;
+    } // returnClassName
 
 	private final identNode className;
 	private final memberDeclsNode members;
@@ -470,29 +474,28 @@ class varDeclNode extends declNode {
     } // checkTypes
 
     void cg() {
-        // Given this variable an index equal to numberOfLocals
-        //   and remember index in ST
-          if ("class".equals(this.parentNode)) {
-              varName.idinfo.varIndex = -1;
-              varName.idinfo.fieldInfo = SymbolInfo.className+"/"+varName.idname;
-              gen(".field static",varName.idname,varType.returnType());
-          }
-          else {
-              varName.idinfo.varIndex = numberOfLocals;
-              // Increment numberOfLocals used in this prog
-              numberOfLocals++;
-          }
-        if (!initValue.isNull()) {
-            if ("class".equals(this.parentNode)) {
-                initValueOfField.put(varName, initValue);
-                //initValue.cg();
-                //gen("putstatic",varName.idinfo.fieldInfo,varType.returnType());
-            } else {
-                initValue.cg();
-                gen("istore",varName.idinfo.varIndex);
-            }
+
+      if ("class".equals(this.parentNode)) {
+          varName.idinfo.varIndex = -1;
+          varName.idinfo.fieldInfo = SymbolInfo.className+"/"+varName.idname;
+          gen(".field static",varName.idname,varType.returnType());
+      }
+      else {
+          varName.idinfo.varIndex = numberOfLocals;
+          // Increment numberOfLocals used in this prog
+          numberOfLocals++;
+      }
+      if (!initValue.isNull()) {
+         if ("class".equals(this.parentNode)) {
+             initValueOfField.put(varName, initValue);
+             //initValue.cg();
+             //gen("putstatic",varName.idinfo.fieldInfo,varType.returnType());
+         } else {
+             initValue.cg();
+             gen("istore",varName.idinfo.varIndex);
         }
-    } // cg
+      }
+   } // cg
 
 	private final identNode varName;
 	private final typeNode varType;
@@ -896,12 +899,16 @@ class methodDeclNode extends ASTNode {
             if (!calArgs.returnMoreDecls().isNull()) {
                 argsType = calArgs.returnThisDecl().returnArgsType();
                 calArgs = calArgs.returnMoreDecls();
+                numOfArgs++;
             }
             while (!calArgs.returnMoreDecls().isNull()) {
                 argsType += calArgs.returnThisDecl().returnArgsType();
                 calArgs = calArgs.returnMoreDecls();
             }
-            argsType += calArgs.returnThisDecl().returnArgsType();
+            if (numOfArgs != 1)
+                argsType += calArgs.returnThisDecl().returnArgsType();
+            else
+                argsType = calArgs.returnThisDecl().returnArgsType();
             name.idinfo.methodSigna = name.idname+"("+argsType+")"+returnType.returnType();
             gen(".method","public static",name.idinfo.methodSigna);
         }
@@ -919,6 +926,7 @@ class methodDeclNode extends ASTNode {
     private String argsType;
     private argDeclsNode calArgs;
     private int storeNumOfLocals;
+    private int numOfArgs = 1;
 	
     private final identNode name;
 	private final argDeclsNode args;
@@ -1211,12 +1219,13 @@ class asgNode extends stmtNode {
         gen("; begin assign operation");
         if (target.returnVarName().idinfo.varIndex == -1 && !((target.kind.val
               == Kinds.Var)&&((target.returnVarName().idinfo.kind.val == Kinds.Array)
-              ||(target.returnVarName().idinfo.kind.val == Kinds.ArrayParm)))) {
+              ||(target.returnVarName().idinfo.kind.val == Kinds.ArrayParm)))) 
+        {
           source.cg();
           sourceFirstCg = 1;
           if ("strLitNode".equals(source.getClass().getName()))
             gen("invokestatic", "CSXLib/convertString(Ljava/lang/String;)[C");
-              }
+        }
         target.cg();
         if (sourceFirstCg == 0) {
           source.cg();
@@ -1233,7 +1242,6 @@ class asgNode extends stmtNode {
           else if (target.type.val == Types.Boolean)
             gen("invokestatic", "CSXLib/checkBoolArrayLength([Z[Z)[Z");
         }
-
 
         if (target.returnVarName().idinfo.kind.val == Kinds.Array ||
             target.returnVarName().idinfo.kind.val == Kinds.ArrayParm) {
@@ -1585,7 +1593,6 @@ class printNode extends stmtNode {
         outputValue.checkTypes();
         morePrints.checkTypes();
 
-
         if (outputValue.kind.val == Kinds.Array) {
             typeMustBe(outputValue.type.val, Types.Character,
                 error() + "For arrays, only char arrays may be written.");
@@ -1720,7 +1727,7 @@ class returnNode extends stmtNode {
 		super(line, col);
 		returnVal = e;
 	} //returnNode
-    
+
     void Unparse(int indent) {
         System.out.print(linenum + ":");
         genIndent(indent);
@@ -1978,7 +1985,7 @@ class booleanOpNode extends exprNode {
         case -1:
           break;
         default:
-          mustBe(false);
+          break;
       } // switch(op)
     } // printOp
 
@@ -2040,7 +2047,7 @@ class booleanOpNode extends exprNode {
             gen("iconst_0");
             genlab(buildlabel(thisLabelCnt));
           }
-        }
+        } // expr.isNull() false
      } // cg
 
     private int thisLabelCnt;
@@ -2055,7 +2062,6 @@ class relationOpNode extends exprNode {
         firstFactor = f1;
         secondFactor = f2;
         operatorCode = op;
-
     } // relationOpNode
 
     static void printOp(int op) {
@@ -2360,7 +2366,7 @@ class unaryOpNode extends exprNode {
           default:
             break;
         }
-    }
+    } // printOp
 
     void Unparse(int indent) {
         printOp(operatorCode);
@@ -2395,7 +2401,6 @@ class unaryOpNode extends exprNode {
           gen("iconst_0");
           genlab(buildlabel(labelCnt));
         }
-
     } // cg
 
 	private final exprNode operand;
@@ -2547,7 +2552,6 @@ class fctCallNode extends exprNode {
                     break;
                 }
             }
-
         } else {
             System.out.println(id.parmListType.size());
             System.out.println(error() + "The number of parameters doesn't match.");
@@ -2695,7 +2699,7 @@ class nameNode extends exprNode {
     } // returnVarName
     exprNode returnSub() {
       return subscriptVal;
-    }
+    } // return subscriptVal
 
     void cg() {
       if (subscriptVal.isNull()) {
@@ -2786,7 +2790,6 @@ class nameNode extends exprNode {
         }
       }
     } // cg
-
 
     static nullNameNode NULL = new nullNameNode(); 
 	private identNode varName;

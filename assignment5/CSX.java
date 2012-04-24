@@ -6,6 +6,10 @@ class CSX {
   public static void
   main(String args[]) throws java.io.IOException, Exception {
 
+    System.out.println("********************");
+    System.out.println("** Author: Chen Liu");
+    System.out.println("********************");
+
 	if (args.length != 1) {
        		System.out.println(
 			"Error: Input file must be named on command line." );
@@ -22,7 +26,7 @@ class CSX {
 		System.exit(-1);
     	}
 
-    String	asmName = "test.j"; // name of asmFile
+    String asmName; // name of asmFile
 
     PrintStream	asmFile; // File to which asm code will be generated
 
@@ -43,13 +47,13 @@ class CSX {
     }
 
     boolean    ok;
-    ok = ((csxLiteNode)root.value).isTypeCorrect();
-    if (ok) { 
-	// You should fill in correct asmName using 
-	// ASTNode.root.className
+    ok = ((classNode)root.value).isTypeCorrect();
+    if (ok) {
+      String className = ((classNode)root.value).returnClassName();
+      asmName = className+".j";
 
 	asmFile = new PrintStream(new FileOutputStream(asmName));
-	if (((csxLiteNode)root.value).codegen(asmFile)) {
+	if (((classNode)root.value).codegen(asmFile)) {
 		asmFile.close();
                 System.out.println("CSX compilation successfully completed.");
                 System.out.println("Translated program is in "+asmName+".");

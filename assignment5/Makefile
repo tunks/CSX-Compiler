@@ -9,13 +9,17 @@
 #
 #    clean    -- removes all generated files
 #
-#    test     -- Tests proj5 by running P5.class with inputs test[123].lite
+#    cg       -- generate .j file by running CSX.class
+#
+#    asm      -- generate .class file by using jasmin
+#
+#    run      -- run the program
 #
 ###
 
 DESTPATH = ./classes
-#COURSEDIR = /homes/raphael/courses/cs541/public
-COURSEDIR = /Users/chenliu/vim-git/compiler-design/public
+COURSEDIR = /homes/raphael/courses/cs541/public
+#COURSEDIR = /Users/chenliu/vim-git/compiler-design/public
 CUPPATH = $(COURSEDIR)/cup
 CLASSPATH = .:$(DESTPATH):$(CUPPATH)/java-cup-10k.jar
 VPATH = $(DESTPATH)
@@ -27,7 +31,7 @@ TESTDIR = .
 	javac $(JCFLAGS) $<
 
 .PHONY: all 
-all: P5.class Yylex.class parser.class CSXLib.class
+all: CSX.class Yylex.class parser.class CSXLib.class
 
 # don't use CUP 0.11a; I couldn't get it to work right.  -- Raphael 2/2011
 sym.java parser.java: lite.cup 
@@ -41,12 +45,25 @@ Scanner.class: Yylex.class Types.class
 SymbolInfo.class: Kinds.class
 ASTNode.class: ast.java sym.class SymbolTable.class SymbolInfo.class
 	javac $(JCFLAGS) ast.java
-P5.class: Yylex.class Scanner.class parser.class ASTNode.class CSXLib.class
+CSX.class: Yylex.class Scanner.class parser.class ASTNode.class CSXLib.class
 
-test: all
-	java $(JFLAGS) P5 $(TESTDIR)/test.csx
-	java -jar $(COURSEDIR)/jasmin.jar test.j
-	java -cp $(CLASSPATH) test
+###
+# generate .j file
+###
+cg: all
+	java $(JFLAGS) CSX $(INPUT)
+
+###
+# generate .class file
+###
+asm:
+	jasmin $(INPUT)
+
+###
+# run the program
+###
+run:
+	java -cp $(CLASSPATH) $(INPUT)
 	@echo
 
 ###
@@ -71,4 +88,4 @@ lint: all
 ###
 
 clean: 
-	rm -f $(DESTPATH)/*.class Yylex.java* sym.java parser.java test.j *.class
+	rm -f $(DESTPATH)/*.class Yylex.java* sym.java parser.java *.j *.class

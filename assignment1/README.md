@@ -1,11 +1,11 @@
 Block-Structured Symbol Table
 ==========
 
-This project, including a set of java classes and a test driver, is used to implement a
-block-structed symbol table. It is the first assignment of compiler design course.
+This project, containing a set of java classes and a test driver, is used to implement a
+block-structed symbol table.
 
 Although there is a testInput file, the test driver is interactive, which means the program
-operates from command line. The testInput file is the set of my test data. And testOutput is
+operates from command line. The testInput file is the set of test data. And testOutput is
 generated in response to the testInput file.
 
 
@@ -29,5 +29,7 @@ generated in response to the testInput file.
 
 
 External documentation:
+
 1.http://download.oracle.com/javase/6/docs/api
+
 2.http://www.cs.uky.edu/~raphael/courses/CS541.html

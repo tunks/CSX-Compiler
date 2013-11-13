@@ -1,35 +1,34 @@
-Project Name: CSX Code Generator
-Author:       Chen Liu
-Email:        chen.liu@uky.edu
+CSX Code Generator
+============
 
 
-1. Description
+## Description
 This project implements the code generator for CSX programs.
 
 
-2. Instructions to compile the program
+## Instructions to compile the program
 
-   make
+   	make
 
 The command above compiles or recompiles classes. The ".class" files are placed
 in subdirectory classes.
 
 
-3. Instructions to run the program
+## Instructions to run the program
 	
-   make cg INPUT=<csx file>
+   	make cg INPUT=<csx file>
 
 The command above will generate JVM code if parse and type check are successful.
 The generated JVM code are placed in file name.j, where name is the identifier
 that names the CSX class.
 
-   make asm INPUT=<name.j>
+   	make asm INPUT=<name.j>
 
 The command above will generate name.class by using Jasmin, where name is
 also the CSX program's class name, and name.j is the file that placed the
 generated JVM code.
 
-   make run INPUT=<name>
+   	make run INPUT=<name>
 
 The command above will run the CSX program.
 

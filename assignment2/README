@@ -1,31 +1,28 @@
+CSX Scanner
+=======
 
-Project Name: CSX Scanner
-Author:       Chen Liu
-Email:        chenliu@uky.edu
+## Description:
 
-
-1.Description:
 This project implements the scanner module for the programming language CSX.
 Use the JFlex scanner-generation tool(based on Lex).
 
 
+## Instruction to compile the program:
 
-2.Instruction to compile the program:
-
-   make
+      make
 
 The command above compiles or recomplies classes. The ".class" files are placed
 in subdirectory classes.
 
 
 
-3.Instruction to run the program:
+## Instruction to run the program:
 
-   make test
+      make test
 
 The command above will run the program, and the default input file is test.csx.
 However, you could also redirect the input file through command:
 
-   make test INPUTFILE=newfilename
+      make test INPUTFILE=newfilename
 
 
